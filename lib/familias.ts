@@ -1,5 +1,3 @@
-import familiasIniciaisData from "@/data/familias.json";
-import presencaIniciaisData from "@/data/presenca.json";
 
 export type Pessoa = {
     id: string;
@@ -30,8 +28,12 @@ export type Presenca = {
 export const STORAGE_FAMILIAS_KEY = "ward.familias";
 export const STORAGE_PRESENCA_KEY = "ward.presenca";
 
-export const familiasIniciais = familiasIniciaisData as Familia[];
-export const presencaIniciais = presencaIniciaisData as Presenca[];
+function storageKey(base: string, ward?: string) {
+    return ward && ward.trim().length > 0 ? `ward.${ward}.${base}` : `ward.${base}`
+}
+
+export const familiasIniciais: Familia[] = [];
+export const presencaIniciais: Presenca[] = [];
 
 export function slugify(valor: string) {
     return valor
@@ -42,13 +44,14 @@ export function slugify(valor: string) {
         .replace(/^-|-$/g, "") || "sem-familia";
 }
 
-export function carregarFamilias(): Familia[] {
+export function carregarFamilias(ward?: string): Familia[] {
     if (typeof window === "undefined") {
         return familiasIniciais;
     }
 
     try {
-        const valorSalvo = window.localStorage.getItem(STORAGE_FAMILIAS_KEY);
+        const key = storageKey('familias', ward)
+        const valorSalvo = window.localStorage.getItem(key);
         if (!valorSalvo) {
             return familiasIniciais;
         }
@@ -60,21 +63,23 @@ export function carregarFamilias(): Familia[] {
     }
 }
 
-export function salvarFamilias(familias: Familia[]) {
+export function salvarFamilias(familias: Familia[], ward?: string) {
     if (typeof window === "undefined") {
         return;
     }
 
-    window.localStorage.setItem(STORAGE_FAMILIAS_KEY, JSON.stringify(familias));
+    const key = storageKey('familias', ward)
+    window.localStorage.setItem(key, JSON.stringify(familias));
 }
 
-export function carregarPresenca(): Presenca[] {
+export function carregarPresenca(ward?: string): Presenca[] {
     if (typeof window === "undefined") {
         return presencaIniciais;
     }
 
     try {
-        const valorSalvo = window.localStorage.getItem(STORAGE_PRESENCA_KEY);
+        const key = storageKey('presenca', ward)
+        const valorSalvo = window.localStorage.getItem(key);
         if (!valorSalvo) {
             return presencaIniciais;
         }
@@ -86,21 +91,22 @@ export function carregarPresenca(): Presenca[] {
     }
 }
 
-export function salvarPresenca(presenca: Presenca[]) {
+export function salvarPresenca(presenca: Presenca[], ward?: string) {
     if (typeof window === "undefined") {
         return;
     }
 
-    window.localStorage.setItem(STORAGE_PRESENCA_KEY, JSON.stringify(presenca));
+    const key = storageKey('presenca', ward)
+    window.localStorage.setItem(key, JSON.stringify(presenca));
 }
 
-export function getFamiliaPorId(id: string): Familia | undefined {
-    return carregarFamilias().find((familia) => familia.id === id);
+export function getFamiliaPorId(id: string, ward?: string): Familia | undefined {
+    return carregarFamilias(ward).find((familia) => familia.id === id);
 }
 
-export function carregarFamiliasEnriquecidas(): Familia[] {
-    const familias = carregarFamilias();
-    const presencas = carregarPresenca();
+export function carregarFamiliasEnriquecidas(ward?: string): Familia[] {
+    const familias = carregarFamilias(ward);
+    const presencas = carregarPresenca(ward);
 
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - 3);

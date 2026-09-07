@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
 import { carregarFamilias, carregarPresenca, salvarPresenca, Presenca as PresencaType } from "@/lib/familias"
+import PageHeader from "@/lib/PageHeader"
 import { isFirestoreEnabled, carregarPresencaFirestore, salvarPresencaFirestore } from "@/lib/firestore"
 
 function getUltimosDomingos() {
@@ -47,20 +48,20 @@ export default function PresencaPage() {
     useEffect(() => {
         let mounted = true
         if (isFirestoreEnabled()) {
-            carregarPresencaFirestore().then((dados) => {
+            carregarPresencaFirestore(password).then((dados) => {
                 if (mounted) setPresencas(dados)
             })
         } else {
-            setPresencas(carregarPresenca())
+            setPresencas(carregarPresenca(password))
         }
 
         return () => {
             mounted = false
         }
-    }, [])
+    }, [password])
 
     const pessoas = useMemo(() => {
-        return carregarFamilias().flatMap((familia) =>
+        return carregarFamilias(password).flatMap((familia) =>
             familia.membros.map((membro) => ({
                 id: membro.id,
                 nome: membro.nome,
@@ -100,9 +101,9 @@ export default function PresencaPage() {
             // persist according to selected storage
             if (isFirestoreEnabled()) {
                 // don't await - fire and forget
-                salvarPresencaFirestore(atualizado).catch(() => { })
+                salvarPresencaFirestore(atualizado, password).catch(() => { })
             } else {
-                salvarPresenca(atualizado)
+                salvarPresenca(atualizado, password)
             }
             return atualizado
         })
@@ -112,17 +113,10 @@ export default function PresencaPage() {
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(700px, 90vw)" }}>
                 <div style={{ textAlign: "center" }}>
-                    <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Presença</h1>
+                    <PageHeader title={"Presença"} basePath={basePath} />
                 </div>
 
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-                    <div style={{ display: "grid", gap: 12, textAlign: "center", marginBottom: 20 }}>
-                        <Link href={`${basePath}/familias`}>Famílias</Link>
-                        <Link href={`${basePath}/datas`}>Datas</Link>
-                        <Link href={`${basePath}/discursos`}>Discursos</Link>
-                        <Link href={`${basePath}/presenca`}>Presença</Link>
-                    </div>
-
                     <div style={{ marginBottom: 16 }}>
                         <p style={{ margin: "0 0 8px" }}>Marcar presença:</p>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: 'center' }}>

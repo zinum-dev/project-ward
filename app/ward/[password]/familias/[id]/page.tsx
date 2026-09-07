@@ -4,9 +4,11 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { carregarFamiliasEnriquecidas, carregarFamilias, type Familia } from "@/lib/familias"
+import { carregarFamiliasEnriquecidas, carregarFamilias, salvarFamilias, type Familia } from "@/lib/familias"
 import { carregarDiscursos, getUltimosDomingos } from "@/lib/discursos"
 import { isFirestoreEnabled, carregarFamiliasFirestore, salvarFamiliasFirestore, carregarPresencaFirestore, carregarDiscursosFirestore } from "@/lib/firestore"
+import { upsertPessoasFromFamilia } from "@/lib/pessoas"
+import PageHeader from "@/lib/PageHeader"
 
 export default function FamiliaDetalhePage() {
     const params = useParams()
@@ -14,6 +16,7 @@ export default function FamiliaDetalhePage() {
     const id = Array.isArray(params?.id) ? params.id[0] : params?.id
     const basePath = password ? `/ward/${password}` : "/ward"
     const [familia, setFamilia] = useState<Familia | undefined>(undefined)
+    const [discursos, setDiscursos] = useState<any[]>([])
 
     useEffect(() => {
         let mounted = true
@@ -26,9 +29,9 @@ export default function FamiliaDetalhePage() {
             if (isFirestoreEnabled()) {
                 try {
                     const [fams, presencas, disc] = await Promise.all([
-                        carregarFamiliasFirestore(),
-                        carregarPresencaFirestore(),
-                        carregarDiscursosFirestore(),
+                        carregarFamiliasFirestore(password),
+                        carregarPresencaFirestore(password),
+                        carregarDiscursosFirestore(password),
                     ])
 
                     // enrich familias with presenca stats
@@ -54,13 +57,13 @@ export default function FamiliaDetalhePage() {
                     // also set discursos for local use (used below)
                     if (mounted) setDiscursos(disc)
                 } catch (e) {
-                    if (mounted) setFamilia(carregarFamilias().find((item) => item.id === id))
+                    if (mounted) setFamilia(carregarFamilias(password).find((item) => item.id === id))
                 }
             } else {
-                const fams = carregarFamiliasEnriquecidas()
+                const fams = carregarFamiliasEnriquecidas(password)
                 const encontrada = fams.find((item) => item.id === id)
-                if (mounted) setFamilia(encontrada ?? carregarFamilias().find((item) => item.id === id))
-                if (mounted) setDiscursos(carregarDiscursos())
+                if (mounted) setFamilia(encontrada ?? carregarFamilias(password).find((item) => item.id === id))
+                if (mounted) setDiscursos(carregarDiscursos(password))
             }
         }
 
@@ -70,12 +73,16 @@ export default function FamiliaDetalhePage() {
     }, [id])
 
     async function salvarFamiliaAtualizada(proximaFamilia: Familia) {
-        const listagem = isFirestoreEnabled() ? await carregarFamiliasFirestore() : carregarFamilias()
+        const listagem = isFirestoreEnabled() ? await carregarFamiliasFirestore(password) : carregarFamilias(password)
         const atualizada = listagem.map((item) => (item.id === proximaFamilia.id ? proximaFamilia : item))
         if (isFirestoreEnabled()) {
-            await salvarFamiliasFirestore(atualizada)
+            await salvarFamiliasFirestore(atualizada, password)
+            // sync pessoas collection
+            await upsertPessoasFromFamilia(proximaFamilia)
         } else {
-            localStorage.setItem("ward.familias", JSON.stringify(atualizada))
+            salvarFamilias(atualizada, password)
+            // update local pessoas cache
+            await upsertPessoasFromFamilia(proximaFamilia)
         }
         setFamilia(proximaFamilia)
     }
@@ -192,7 +199,7 @@ export default function FamiliaDetalhePage() {
     return (
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <Header basePath={basePath} />
+                <PageHeader title={"Famílias"} basePath={basePath} />
 
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ textAlign: "center", margin: "0 0 20px" }}>
@@ -238,7 +245,7 @@ export default function FamiliaDetalhePage() {
                                 ) : (
                                     familia.membros.map((membro) => {
                                         // compute last discurso for this member
-                                        const discursos = carregarDiscursos()
+                                        const discursos = carregarDiscursos(password)
                                         const porPessoa = discursos.filter(d => d.pessoaId === membro.id).slice().sort((a, b) => (a.data < b.data ? 1 : -1))
                                         const ultimo = porPessoa[0]
                                         function fmt(iso: string | undefined) {
@@ -306,16 +313,4 @@ export default function FamiliaDetalhePage() {
     )
 }
 
-function Header({ basePath }: { basePath: string }) {
-    return (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward</h1>
-            <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                <Link href={`${basePath}/familias`}>Famílias</Link>
-                <Link href={`${basePath}/datas`}>Datas</Link>
-                <Link href={`${basePath}/discursos`}>Discursos</Link>
-                <Link href={`${basePath}/presenca`}>Presença</Link>
-            </div>
-        </div>
-    )
-}
+// Header replaced by shared PageHeader component

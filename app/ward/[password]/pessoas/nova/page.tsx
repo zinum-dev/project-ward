@@ -1,7 +1,8 @@
-'use client'
+"use client"
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import PageHeader from "@/lib/PageHeader"
 
 export default function Page() {
     const params = useParams()
@@ -15,19 +16,9 @@ export default function Page() {
     return (
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(560px, 90vw)" }}>
-                <div style={{ textAlign: "center" }}>
-                    <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Nova pessoa</h1>
-                </div>
+                <PageHeader title={"Nova pessoa"} basePath={basePath} />
 
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-                    <div style={{ display: "grid", gap: 12, textAlign: "center", marginBottom: 20 }}>
-                        <Link href={`${basePath}/pessoas`}>Pessoas</Link>
-                        <Link href={`${basePath}/familias`}>Famílias</Link>
-                        <Link href={`${basePath}/datas`}>Datas</Link>
-                        <Link href={`${basePath}/discursos`}>Discursos</Link>
-                        <Link href={`${basePath}/presenca`}>Presença</Link>
-                    </div>
-
                     <div style={{ display: "grid", gap: 8 }}>
                         <label>
                             Nome

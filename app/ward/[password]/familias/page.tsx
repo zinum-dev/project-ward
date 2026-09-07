@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 
 import { carregarFamilias, type Familia } from "@/lib/familias"
 import { isFirestoreEnabled, carregarFamiliasFirestore } from "@/lib/firestore"
+import PageHeader from "@/lib/PageHeader"
 
 export default function FamiliasPage() {
     const params = useParams()
@@ -16,17 +17,17 @@ export default function FamiliasPage() {
     useEffect(() => {
         let mounted = true
         if (isFirestoreEnabled()) {
-            carregarFamiliasFirestore().then((fams) => {
+            carregarFamiliasFirestore(password).then((fams) => {
                 if (mounted) setFamilias(fams)
             }).catch(() => {
                 if (mounted) setFamilias([])
             })
         } else {
-            setFamilias(carregarFamilias())
+            setFamilias(carregarFamilias(password))
         }
 
         return () => { mounted = false }
-    }, [])
+    }, [password])
 
     if (!password) {
         return <div>Senha não definida</div>
@@ -35,7 +36,7 @@ export default function FamiliasPage() {
     return (
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(900px, 90vw)" }}>
-                <Header basePath={basePath} />
+                <PageHeader title={"Famílias"} basePath={basePath} />
 
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <h2 style={{ textAlign: "center", marginBottom: 20 }}>Famílias</h2>
@@ -80,16 +81,3 @@ export default function FamiliasPage() {
     )
 }
 
-function Header({ basePath }: { basePath: string }) {
-    return (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward</h1>
-            <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                <Link href={`${basePath}/familias`}>Famílias</Link>
-                <Link href={`${basePath}/datas`}>Datas</Link>
-                <Link href={`${basePath}/discursos`}>Discursos</Link>
-                <Link href={`${basePath}/presenca`}>Presença</Link>
-            </div>
-        </div>
-    )
-}

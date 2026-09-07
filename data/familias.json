@@ -1,130 +1,66 @@
 [
     {
-        "id": "fam-001",
-        "nome": "Cabral",
-        "telefone": "",
-        "endereco": "",
-        "observacoes": "",
+        "id": "silva",
+        "nome": "Família Silva",
+        "telefone": "(11) 99999-0001",
+        "endereco": "Rua A, 123",
         "membros": [
             {
-                "id": "pes-001",
-                "nome": "Valdir Cabral Junior",
-                "responsavel": true,
-                "observacoes": ""
+                "id": "p1",
+                "nome": "João Silva",
+                "responsavel": true
             },
             {
-                "id": "pes-002",
-                "nome": "Vanessa de Albuquerque Cabral",
-                "responsavel": false,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-003",
-                "nome": "Heitor de Albuquerque Cabral",
-                "responsavel": false,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-004",
-                "nome": "Laura de Albuquerque Cabral",
-                "responsavel": false,
-                "observacoes": ""
+                "id": "p2",
+                "nome": "Maria Silva"
             }
         ]
     },
     {
-        "id": "fam-002",
-        "nome": "Tavares",
-        "telefone": "",
-        "endereco": "",
-        "observacoes": "",
+        "id": "santos",
+        "nome": "Família Santos",
         "membros": [
             {
-                "id": "pes-005",
-                "nome": "David Burgos Mendes Tavares",
-                "responsavel": true,
-                "observacoes": ""
+                "id": "p3",
+                "nome": "Carlos Santos",
+                "responsavel": true
             },
             {
-                "id": "pes-006",
-                "nome": "Maria Karla Belo da Silva Tavares",
-                "responsavel": false,
-                "observacoes": ""
+                "id": "p4",
+                "nome": "Ana Santos"
             }
         ]
     },
     {
-        "id": "fam-003",
-        "nome": "Muniz",
-        "telefone": "",
-        "endereco": "",
-        "observacoes": "",
+        "id": "oliveira",
+        "nome": "Família Oliveira",
         "membros": [
             {
-                "id": "pes-007",
-                "nome": "André Figueiredo Muniz",
-                "responsavel": true,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-008",
-                "nome": "Kevelen Kim Class Muniz",
-                "responsavel": false,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-009",
-                "nome": "Vicente Class Muniz",
-                "responsavel": false,
-                "observacoes": ""
+                "id": "p5",
+                "nome": "Paulo Oliveira",
+                "responsavel": true
             }
         ]
     },
     {
-        "id": "fam-004",
-        "nome": "Rodrigues",
-        "telefone": "",
-        "endereco": "",
-        "observacoes": "",
+        "id": "pereira",
+        "nome": "Família Pereira",
         "membros": [
             {
-                "id": "pes-010",
-                "nome": "Antônio Alves Rodrigues Filho",
-                "responsavel": true,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-011",
-                "nome": "Andréa Sobral Carvalheira",
-                "responsavel": false,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-012",
-                "nome": "Amanda Carvalheira Rodrigues",
-                "responsavel": false,
-                "observacoes": ""
+                "id": "p6",
+                "nome": "Lucas Pereira",
+                "responsavel": true
             }
         ]
     },
     {
-        "id": "fam-005",
-        "nome": "Santos",
-        "telefone": "",
-        "endereco": "",
-        "observacoes": "",
+        "id": "costa",
+        "nome": "Família Costa",
         "membros": [
             {
-                "id": "pes-013",
-                "nome": "José Santos",
-                "responsavel": true,
-                "observacoes": ""
-            },
-            {
-                "id": "pes-014",
-                "nome": "Marina Santos",
-                "responsavel": false,
-                "observacoes": ""
+                "id": "p7",
+                "nome": "Mariana Costa",
+                "responsavel": true
             }
         ]
     }

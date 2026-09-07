@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "id": "2026-08-01-p1",
+        "data": "2026-08-01",
+        "pessoaId": "p1",
+        "presente": true
+    },
+    {
+        "id": "2026-08-01-p3",
+        "data": "2026-08-01",
+        "pessoaId": "p3",
+        "presente": true
+    }
+]

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 
+import PageHeader from "@/lib/PageHeader"
 import { carregarFamilias, salvarFamilias, slugify, type Familia, type Pessoa } from "@/lib/familias"
 
 export default function NovaFamiliaPage() {
@@ -11,6 +12,9 @@ export default function NovaFamiliaPage() {
     const router = useRouter()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
     const basePath = password ? `/ward/${password}` : "/ward"
+    if (!password) {
+        return <div>Senha não definida</div>
+    }
 
     const [form, setForm] = useState({
         nome: "",
@@ -19,10 +23,6 @@ export default function NovaFamiliaPage() {
         observacoes: "",
         membros: "",
     })
-
-    if (!password) {
-        return <div>Senha não definida</div>
-    }
 
     function handleChange(field: string, value: string) {
         setForm((atual) => ({ ...atual, [field]: value }))
@@ -52,8 +52,8 @@ export default function NovaFamiliaPage() {
             membros: membros.length > 0 ? membros : [{ id: `pes-${Date.now()}-1`, nome: form.nome.trim(), responsavel: true, observacoes: "", ultimoDiscurso: undefined }],
         }
 
-        const familias = carregarFamilias()
-        salvarFamilias([...familias, familia])
+        const familias = carregarFamilias(password)
+        salvarFamilias([...familias, familia], password)
         router.push(`${basePath}/familias/${slugify(familia.nome)}`)
     }
 
@@ -70,7 +70,7 @@ export default function NovaFamiliaPage() {
     return (
         <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <Header basePath={basePath} />
+                <PageHeader title={"Famílias"} basePath={basePath} />
 
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ textAlign: "center", margin: "0 0 20px" }}>
@@ -144,16 +144,4 @@ export default function NovaFamiliaPage() {
     )
 }
 
-function Header({ basePath }: { basePath: string }) {
-    return (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward</h1>
-            <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                <Link href={`${basePath}/familias`}>Famílias</Link>
-                <Link href={`${basePath}/datas`}>Datas</Link>
-                <Link href={`${basePath}/discursos`}>Discursos</Link>
-                <Link href={`${basePath}/presenca`}>Presença</Link>
-            </div>
-        </div>
-    )
-}
+// Header replaced by shared PageHeader component

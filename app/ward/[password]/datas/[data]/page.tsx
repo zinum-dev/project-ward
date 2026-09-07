@@ -22,12 +22,12 @@ export default function DataDetalhePage() {
 
     const presentes = useMemo(() => {
         const mapaNomePorId = new Map(
-            carregarFamilias().flatMap((familia) =>
+            carregarFamilias(password).flatMap((familia) =>
                 familia.membros.map((membro) => [membro.id, membro.nome] as [string, string]),
             ),
         )
 
-        return carregarPresenca()
+        return carregarPresenca(password)
             .filter((registro) => registro.data === data && registro.presente)
             .map((registro) => ({
                 id: registro.pessoaId,
