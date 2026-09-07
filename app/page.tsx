@@ -19,7 +19,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
       <main style={{ width: "min(420px, 90vw)", padding: 24 }}>
         <h1 style={{ marginBottom: 16 }}>Ward</h1>
 

@@ -3,6 +3,23 @@
 :root {
   --background: #171717;
   --foreground: #ffffff;
+  --surface-bg: rgba(255, 255, 255, 0.04);
+  --border-color: rgba(255, 255, 255, 0.9);
+  --input-text: #ffffff;
+  --button-bg: #ffffff;
+  --button-text: #111111;
+  --focus-ring: rgba(255, 255, 255, 0.35);
+}
+
+:root[data-theme="light"] {
+  --background: #f3f4f6;
+  --foreground: #111827;
+  --surface-bg: rgba(17, 24, 39, 0.04);
+  --border-color: rgba(17, 24, 39, 0.8);
+  --input-text: #111827;
+  --button-bg: #111827;
+  --button-text: #ffffff;
+  --focus-ring: rgba(17, 24, 39, 0.35);
 }
 
 @theme inline {
@@ -12,15 +29,71 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+input,
+textarea,
+select {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--input-text);
+  box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+button {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.96;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Discursos responsive helpers */
+.discursos-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.discursos-add-row .discursos-input {
+  min-width: 0;
+}
+.discursos-add-row .discursos-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .discursos-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .discursos-add-row .discursos-btn {
+    width: 100%;
+  }
+
+  .discursos-section {
+    padding: 10px;
+  }
 }

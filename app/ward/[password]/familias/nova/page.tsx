@@ -40,6 +40,7 @@ export default function NovaFamiliaPage() {
                 nome,
                 responsavel: index === 0,
                 observacoes: "",
+                ultimoDiscurso: undefined,
             } as Pessoa))
 
         const familia: Familia = {
@@ -48,7 +49,7 @@ export default function NovaFamiliaPage() {
             telefone: form.telefone.trim(),
             endereco: form.endereco.trim(),
             observacoes: form.observacoes.trim(),
-            membros: membros.length > 0 ? membros : [{ id: `pes-${Date.now()}-1`, nome: form.nome.trim(), responsavel: true, observacoes: "" }],
+            membros: membros.length > 0 ? membros : [{ id: `pes-${Date.now()}-1`, nome: form.nome.trim(), responsavel: true, observacoes: "", ultimoDiscurso: undefined }],
         }
 
         const familias = carregarFamilias()
@@ -56,45 +57,87 @@ export default function NovaFamiliaPage() {
         router.push(`${basePath}/familias/${slugify(familia.nome)}`)
     }
 
+    const inputStyle = {
+        padding: "10px 12px",
+        fontSize: 16,
+        border: "1px solid var(--border-color)",
+        borderRadius: 8,
+        background: "transparent",
+        color: "var(--input-text)",
+        outline: "none",
+    } as const
+
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif" }}>
-            <div style={{ width: "min(520px, 90vw)" }}>
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+            <div style={{ width: "min(760px, 92vw)" }}>
                 <Header basePath={basePath} />
 
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid #fff" }}>
-                    <h2 style={{ textAlign: "center", marginBottom: 20 }}>Nova família</h2>
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
+                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+                    <div style={{ textAlign: "center", margin: "0 0 20px" }}>
                         <Link href={`${basePath}/familias`}>Voltar para famílias</Link>
                     </div>
 
-                    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12, maxWidth: 420, margin: "0 auto" }}>
-                        <label>
-                            Nome da família
-                            <input value={form.nome} onChange={(event) => handleChange("nome", event.target.value)} required />
-                        </label>
+                    <div style={{ display: "grid", gap: 24 }}>
+                        <section style={{ display: "grid", gap: 12, border: "1px solid var(--border-color)", padding: 16, borderRadius: 12 }}>
+                            <h2 style={{ margin: 0, textAlign: "center" }}>Nova família</h2>
 
-                        <label>
-                            Telefone
-                            <input value={form.telefone} onChange={(event) => handleChange("telefone", event.target.value)} />
-                        </label>
+                            <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+                                <label style={{ display: "grid", gap: 6 }}>
+                                    Nome da família
+                                    <input
+                                        value={form.nome}
+                                        onChange={(event) => handleChange("nome", event.target.value)}
+                                        required
+                                        style={inputStyle}
+                                    />
+                                </label>
 
-                        <label>
-                            Endereço
-                            <input value={form.endereco} onChange={(event) => handleChange("endereco", event.target.value)} />
-                        </label>
+                                <label style={{ display: "grid", gap: 6 }}>
+                                    Telefone
+                                    <input
+                                        value={form.telefone}
+                                        onChange={(event) => handleChange("telefone", event.target.value)}
+                                        style={inputStyle}
+                                    />
+                                </label>
 
-                        <label>
-                            Membros (um por linha ou separados por vírgula)
-                            <textarea value={form.membros} onChange={(event) => handleChange("membros", event.target.value)} rows={5} placeholder="Maria Silva\nJoão Silva\nPedro Silva" required />
-                        </label>
+                                <label style={{ display: "grid", gap: 6 }}>
+                                    Endereço
+                                    <input
+                                        value={form.endereco}
+                                        onChange={(event) => handleChange("endereco", event.target.value)}
+                                        style={inputStyle}
+                                    />
+                                </label>
 
-                        <label>
-                            Observações gerais da família
-                            <textarea value={form.observacoes} onChange={(event) => handleChange("observacoes", event.target.value)} rows={4} />
-                        </label>
+                                <label style={{ display: "grid", gap: 6 }}>
+                                    Membros (um por linha ou separados por vírgula)
+                                    <textarea
+                                        value={form.membros}
+                                        onChange={(event) => handleChange("membros", event.target.value)}
+                                        rows={5}
+                                        placeholder="Maria Silva\nJoão Silva\nPedro Silva"
+                                        required
+                                        style={{ ...inputStyle, resize: "vertical" }}
+                                    />
+                                </label>
 
-                        <button type="submit">Salvar família</button>
-                    </form>
+                                <label style={{ display: "grid", gap: 6 }}>
+                                    Observações gerais da família
+                                    <textarea
+                                        value={form.observacoes}
+                                        onChange={(event) => handleChange("observacoes", event.target.value)}
+                                        rows={4}
+                                        style={{ ...inputStyle, resize: "vertical" }}
+                                    />
+                                </label>
+
+                                <div style={{ display: "flex", justifyContent: "center" }}>
+                                    <button type="submit">Salvar família</button>
+                                </div>
+                            </form>
+                        </section>
+                    </div>
                 </div>
             </div>
         </div>
@@ -104,11 +147,11 @@ export default function NovaFamiliaPage() {
 function Header({ basePath }: { basePath: string }) {
     return (
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid #fff", display: "inline-block" }}>Ward</h1>
+            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward</h1>
             <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                <Link href={`${basePath}/pessoas`}>Pessoas</Link>
                 <Link href={`${basePath}/familias`}>Famílias</Link>
                 <Link href={`${basePath}/datas`}>Datas</Link>
+                <Link href={`${basePath}/discursos`}>Discursos</Link>
                 <Link href={`${basePath}/presenca`}>Presença</Link>
             </div>
         </div>

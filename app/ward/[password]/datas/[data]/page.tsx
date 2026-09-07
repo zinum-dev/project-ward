@@ -6,6 +6,14 @@ import { useMemo } from "react"
 
 import { carregarFamilias, carregarPresenca } from "@/lib/familias"
 
+function formatDateDisplay(isoDate: string) {
+    const d = new Date(isoDate + 'T00:00:00')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yyyy = d.getFullYear()
+    return `${dd}-${mm}-${yyyy}`
+}
+
 export default function DataDetalhePage() {
     const params = useParams()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
@@ -32,13 +40,13 @@ export default function DataDetalhePage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif" }}>
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(560px, 90vw)" }}>
                 <div style={{ textAlign: "center" }}>
-                    <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid #fff", display: "inline-block" }}>Data: {data || "não informada"}</h1>
+                    <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Data: {data ? formatDateDisplay(data) : "não informada"}</h1>
                 </div>
 
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid #fff" }}>
+                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ textAlign: "center", marginBottom: 20 }}>
                         <Link href={`${basePath}/datas`}>Voltar para datas</Link>
                     </div>

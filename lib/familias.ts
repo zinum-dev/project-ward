@@ -4,10 +4,11 @@ import presencaIniciaisData from "@/data/presenca.json";
 export type Pessoa = {
     id: string;
     nome: string;
-    telefone?: string;
-    endereco?: string;
     responsavel?: boolean;
     observacoes?: string;
+    ultimoDiscurso?: string;
+    ultimoPresenca?: string;
+    presencasUltimos3Meses?: number;
 };
 
 export type Familia = {
@@ -95,4 +96,27 @@ export function salvarPresenca(presenca: Presenca[]) {
 
 export function getFamiliaPorId(id: string): Familia | undefined {
     return carregarFamilias().find((familia) => familia.id === id);
+}
+
+export function carregarFamiliasEnriquecidas(): Familia[] {
+    const familias = carregarFamilias();
+    const presencas = carregarPresenca();
+
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 3);
+
+    return familias.map((familia) => ({
+        ...familia,
+        membros: familia.membros.map((membro) => {
+            const registros = presencas.filter((p) => p.pessoaId === membro.id && p.presente);
+            const ultimo = registros.length === 0 ? undefined : registros.slice().sort((a, b) => (a.data > b.data ? -1 : 1))[0].data;
+            const contagem = registros.filter((r) => new Date(r.data) >= cutoff).length;
+
+            return {
+                ...membro,
+                ultimoPresenca: ultimo,
+                presencasUltimos3Meses: contagem,
+            };
+        }),
+    }));
 }

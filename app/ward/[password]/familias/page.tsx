@@ -1,10 +1,11 @@
-'use client'
+"use client"
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { carregarFamilias, type Familia } from "@/lib/familias"
+import { isFirestoreEnabled, carregarFamiliasFirestore } from "@/lib/firestore"
 
 export default function FamiliasPage() {
     const params = useParams()
@@ -13,7 +14,18 @@ export default function FamiliasPage() {
     const [familias, setFamilias] = useState<Familia[]>([])
 
     useEffect(() => {
-        setFamilias(carregarFamilias())
+        let mounted = true
+        if (isFirestoreEnabled()) {
+            carregarFamiliasFirestore().then((fams) => {
+                if (mounted) setFamilias(fams)
+            }).catch(() => {
+                if (mounted) setFamilias([])
+            })
+        } else {
+            setFamilias(carregarFamilias())
+        }
+
+        return () => { mounted = false }
     }, [])
 
     if (!password) {
@@ -21,11 +33,11 @@ export default function FamiliasPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif" }}>
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
             <div style={{ width: "min(900px, 90vw)" }}>
                 <Header basePath={basePath} />
 
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid #fff" }}>
+                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <h2 style={{ textAlign: "center", marginBottom: 20 }}>Famílias</h2>
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                         <Link href={`${basePath}/familias/nova`}>Nova família</Link>
@@ -43,10 +55,11 @@ export default function FamiliasPage() {
                                         gridTemplateColumns: "1.3fr 1fr auto",
                                         gap: 12,
                                         alignItems: "center",
-                                        border: "1px solid #fff",
+                                        border: "1px solid var(--border-color)",
                                         borderRadius: 8,
                                         padding: "12px 16px",
-                                        background: "rgba(255,255,255,0.02)",
+                                        background: "var(--surface-bg)",
+                                        color: "var(--foreground)",
                                     }}
                                 >
                                     <div>
@@ -70,11 +83,11 @@ export default function FamiliasPage() {
 function Header({ basePath }: { basePath: string }) {
     return (
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid #fff", display: "inline-block" }}>Ward</h1>
+            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward</h1>
             <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                <Link href={`${basePath}/pessoas`}>Pessoas</Link>
                 <Link href={`${basePath}/familias`}>Famílias</Link>
                 <Link href={`${basePath}/datas`}>Datas</Link>
+                <Link href={`${basePath}/discursos`}>Discursos</Link>
                 <Link href={`${basePath}/presenca`}>Presença</Link>
             </div>
         </div>
