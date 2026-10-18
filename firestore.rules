@@ -1,10 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Temporário para desenvolvimento: liberar leitura e escrita.
-    // Trocar por regras restritivas antes de produção.
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrapAdmin() {
+      return signedIn() && request.auth.token.email == 'andre.zinum@gmail.com';
+    }
+
+    function isAllowedForWard(wardId) {
+      let email = request.auth.token.email;
+      let userPath = /databases/$(database)/documents/allowedUsers/$(email);
+      return isBootstrapAdmin() || (
+        signedIn() && email != null &&
+        exists(userPath) &&
+        get(userPath).data.wards is list &&
+        get(userPath).data.wards.hasAny([wardId])
+      );
+    }
+
+    match /allowedUsers/{email} {
+      allow get: if isBootstrapAdmin() || (signedIn() && request.auth.token.email == email);
+      allow list: if isBootstrapAdmin();
+      allow create, update, delete: if isBootstrapAdmin();
+    }
+
+    match /wards/{wardId}/familias/{familiaId} {
+      allow read, write: if isAllowedForWard(wardId);
+    }
+
+    match /wards/{wardId}/presencas/{dataId} {
+      allow read, write: if isAllowedForWard(wardId);
+    }
+
+    match /wards/{wardId}/discursos/{discursoId} {
+      allow read, write: if isAllowedForWard(wardId);
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

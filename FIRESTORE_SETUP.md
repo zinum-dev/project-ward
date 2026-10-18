@@ -28,29 +28,37 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 npm install
 ```
 
-5) Data layout
+5) Google Authentication and access control
+
+- In Firebase Console → Authentication → Sign-in method, enable Google.
+- Add the local development host and the production host (for example, the Vercel domain) to Authorized domains.
+- The bootstrap administrator is `andre.zinum@gmail.com`; this account can manage the global email-to-ward access list and is not removable from the app.
+- The administrator adds each email and the ward IDs it may access. Ward IDs are the URL segments, such as `galeao`.
+- Publish the restrictive `firestore.rules` rules before inviting users. The rules deny access by default and authorize each ward using `allowedUsers/{email}.wards`.
+
+6) Data layout
 
 All ward data is stored in Firestore below `wards/{wardId}`, where `wardId` is the password segment in the URL:
 
 - `wards/{wardId}/familias/{familiaId}` — family document, including its nested members
-- `wards/{wardId}/pessoas/{pessoaId}` — normalized member document
-- `wards/{wardId}/presencas/{YYYY-MM-DD}` — attendance document with `presentes: string[]`
+- `wards/{wardId}/presencas/{YYYY-MM-DD}` — attendance document with `statusPorPessoa: Record<pessoaId, estado>`
 - `wards/{wardId}/discursos/{discursoId}` — one document per talk
+- `allowedUsers/{email}` — global access record with the list of permitted ward IDs
 
 The app no longer reads or writes ward data in `localStorage`. Existing browser-local data is not migrated automatically and is ignored.
 
-6) How the helper works
+7) How the helper works
 - `lib/firestore.ts` exposes:
   - `isFirestoreEnabled()` — checks env + opt-in
   - `initFirebase()` — initializes the SDK in the browser
   - Firestore read/write helpers — require a ward id and use only `wards/{wardId}/...` paths
 
-Security recommendations (dev → prod):
-- The password in the URL is only a namespace. It does not authenticate a user or protect a ward's data.
-- Firebase web config is public. Firestore Security Rules must enforce authentication and ward-level authorization before production.
-- Test mode/open rules are for local experiments only; never deploy them to production. This app does not yet implement Firebase Authentication, so production rules need an authentication flow before the data can be safely exposed.
+Security notes:
+- The password in the URL is only a namespace, not an authentication credential.
+- Firebase web config is public. Firestore Security Rules enforce Google authentication and ward-level access; UI checks alone are not security.
+- The bootstrap administrator email appears in both `lib/firebase-auth.ts` and `firestore.rules`; keep them in sync if the admin changes.
 
-Monitoring & billing
+8) Monitoring & billing
 - In the Firebase Console → Usage you can see read/write counts and storage used.
 - When you enable Blaze (pay-as-you-go) attach a Billing Account in Google Cloud and configure budgets/alerts to avoid surprises.
 

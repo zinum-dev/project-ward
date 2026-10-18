@@ -15,8 +15,6 @@ export default function NovaFamiliaPage() {
     const basePath = password ? `/ward/${password}` : "/ward"
     const [form, setForm] = useState({
         nome: "",
-        telefone: "",
-        endereco: "",
         observacoes: "",
         membros: "",
     })
@@ -50,8 +48,6 @@ export default function NovaFamiliaPage() {
         const familia: Familia = {
             id: `fam-${Date.now()}`,
             nome: form.nome.trim(),
-            telefone: form.telefone.trim(),
-            endereco: form.endereco.trim(),
             observacoes: form.observacoes.trim(),
             membros: membros.length > 0 ? membros : [{ id: gerarPessoaId(), nome: form.nome.trim(), responsavel: true, observacoes: "" }],
         }
@@ -114,30 +110,12 @@ export default function NovaFamiliaPage() {
                                 </label>
 
                                 <label style={{ display: "grid", gap: 6 }}>
-                                    Telefone
-                                    <input
-                                        value={form.telefone}
-                                        onChange={(event) => handleChange("telefone", event.target.value)}
-                                        style={inputStyle}
-                                    />
-                                </label>
-
-                                <label style={{ display: "grid", gap: 6 }}>
-                                    Endereço
-                                    <input
-                                        value={form.endereco}
-                                        onChange={(event) => handleChange("endereco", event.target.value)}
-                                        style={inputStyle}
-                                    />
-                                </label>
-
-                                <label style={{ display: "grid", gap: 6 }}>
                                     Membros (um por linha ou separados por vírgula)
                                     <textarea
                                         value={form.membros}
                                         onChange={(event) => handleChange("membros", event.target.value)}
                                         rows={5}
-                                        placeholder="Maria Silva\nJoão Silva\nPedro Silva"
+                                        placeholder={"Maria Silva\nJoão Silva\nPedro Silva"}
                                         required
                                         style={{ ...inputStyle, resize: "vertical" }}
                                     />
