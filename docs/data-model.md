@@ -1,18 +1,15 @@
 # Modelagem de Dados — Project Ward
 
-Este documento descreve a modelagem local (localStorage) e remota (Firestore) usada pela aplicação.
+Este documento descreve a modelagem persistida no Firestore pela aplicação.
 
 ## Convenção de namespacing por ward/password
 - Cada ward é identificada pelo `password` que o usuário informa na URL (`/ward/{password}`).
-- LocalStorage: chaves no formato `ward.{password}.{tipo}`
-  - Ex.: `ward.minhaSenha.familias`, `ward.minhaSenha.presenca`, `ward.minhaSenha.discursos`, `ward.minhaSenha.pessoas`
-- Firestore (recomendado): coleção `wards` com subcoleções por ward id (o `password`):
+- Firestore: coleção `wards` com subcoleções por ward id (o `password`):
   - `wards/{wardId}/familias`
   - `wards/{wardId}/presencas`
   - `wards/{wardId}/discursos`
-  - `wards/{wardId}/pessoas`
 
-> Alternativa: usar coleções top-level (`familias`, `presencas`) e incluir o campo `ward: string` em cada documento; vantajoso quando se deseja consultar cross-wards, mas menos organizado.
+O `password` na URL serve apenas para selecionar o namespace; não é um mecanismo de autenticação ou autorização.
 
 ---
 
@@ -31,7 +28,7 @@ Representa um grupo/família.
 - observacoes?: string
 - membros: Pessoa[]
 
-Exemplo (localStorage / Firestore doc):
+Exemplo de documento Firestore:
 {
   "id": "fam-1690000000000",
   "nome": "Silva",
@@ -50,17 +47,14 @@ Exemplo (localStorage / Firestore doc):
 - ultimoPresenca?: string (ISO date)
 - presencasUltimos3Meses?: number
 
-Observação: `pessoas` podem ser mantidas em coleção normalizada (`wards/{wardId}/pessoas`) para facilitar buscas, enquanto `membros` em `Familia` mantém a relação aninhada.
+Os membros são armazenados somente dentro do documento da família. Presenças e discursos referenciam o `id` do membro; não há uma coleção duplicada de pessoas.
 
 ### Presenca
-Registra presença de uma pessoa em uma data (domingo).
-- id: string (ex.: `pre-1690000001234`)
-- data: string (ISO yyyy-mm-dd)
-- pessoaId: string
-- presente: boolean
+Registra o estado de presença de cada pessoa em uma data (domingo).
+- estado: `presente`, `online` ou `estaca`
+- ausente: pessoa sem entrada no mapa de estados
 
-Armazenamento local: array de `Presenca` serializado em `ward.{password}.presenca`.
-Firestore: documentos em `wards/{wardId}/presencas/{id}` ou um documento por data contendo `presentes: Presenca[]` — atualmente a implementação usa documentos individuais por `Presenca`.
+Firestore: um documento por data em `wards/{wardId}/presencas/{YYYY-MM-DD}`, contendo `statusPorPessoa: Record<pessoaId, estado>` e `updatedAt`.
 
 ### Discurso
 - id: string
@@ -75,17 +69,11 @@ Regras de negócio relevantes:
 
 ---
 
-## Exemplos de uso no código
-- `carregarFamilias()` lê `localStorage.getItem("ward.{password}.familias")` e retorna `Familia[]`.
-- `salvarPresenca()` grava em `ward.{password}.presenca` um array de `Presenca`.
-- Firestore helpers devem aceitar o `wardId` e usar `wards/{wardId}/...` como caminho.
+## Persistência
+- Os helpers de leitura e escrita recebem `wardId` e usam somente caminhos `wards/{wardId}/...`.
+- Dados antigos eventualmente existentes no `localStorage` não são lidos nem migrados automaticamente.
+- Preferências de interface, como o tema visual, podem continuar no armazenamento local do navegador; não são dados da ward.
 
 ---
 
-## Próximos passos sugeridos
-- Atualizar as funções de persistência em `lib/familias.ts` e `lib/firestore.ts` para receber `wardId` (password) e usar keys / paths namespaced.
-- Normalizar `pessoas` em `wards/{wardId}/pessoas` para permitir operações de busca e relacionamento sem iterar por todas as famílias.
-- Implementar migração automática: quando abrir uma ward nova e existir dados locais sem namespace, oferecer migrar para `ward.{password}.XXX`.
-
-
-> Arquivo gerado automaticamente pelo agente em 2026-09-07.
+> Atualizado em 2026-10-18.

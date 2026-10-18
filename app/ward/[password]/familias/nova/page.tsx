@@ -5,17 +5,14 @@ import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 
 import PageHeader from "@/lib/PageHeader"
-import { carregarFamilias, salvarFamilias, slugify, type Familia, type Pessoa } from "@/lib/familias"
+import { gerarPessoaId, type Familia, type Pessoa } from "@/lib/familias"
+import { salvarFamiliaFirestore } from "@/lib/firestore"
 
 export default function NovaFamiliaPage() {
     const params = useParams()
     const router = useRouter()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
     const basePath = password ? `/ward/${password}` : "/ward"
-    if (!password) {
-        return <div>Senha não definida</div>
-    }
-
     const [form, setForm] = useState({
         nome: "",
         telefone: "",
@@ -23,24 +20,31 @@ export default function NovaFamiliaPage() {
         observacoes: "",
         membros: "",
     })
+    const [salvando, setSalvando] = useState(false)
+    const [erro, setErro] = useState("")
+
+    if (!password) {
+        return <div>Senha não definida</div>
+    }
 
     function handleChange(field: string, value: string) {
         setForm((atual) => ({ ...atual, [field]: value }))
     }
 
-    function handleSubmit(event: FormEvent) {
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault()
+        setSalvando(true)
+        setErro("")
 
         const membros = form.membros
             .split(/\n|,/)
             .map((linha) => linha.trim())
             .filter(Boolean)
             .map((nome, index) => ({
-                id: `pes-${Date.now()}-${index + 1}`,
+                id: gerarPessoaId(),
                 nome,
                 responsavel: index === 0,
                 observacoes: "",
-                ultimoDiscurso: undefined,
             } as Pessoa))
 
         const familia: Familia = {
@@ -49,12 +53,29 @@ export default function NovaFamiliaPage() {
             telefone: form.telefone.trim(),
             endereco: form.endereco.trim(),
             observacoes: form.observacoes.trim(),
-            membros: membros.length > 0 ? membros : [{ id: `pes-${Date.now()}-1`, nome: form.nome.trim(), responsavel: true, observacoes: "", ultimoDiscurso: undefined }],
+            membros: membros.length > 0 ? membros : [{ id: gerarPessoaId(), nome: form.nome.trim(), responsavel: true, observacoes: "" }],
         }
 
-        const familias = carregarFamilias(password)
-        salvarFamilias([...familias, familia], password)
-        router.push(`${basePath}/familias/${slugify(familia.nome)}`)
+        try {
+            console.log('[familia] iniciar salvamento', {
+                password,
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                enabled: process.env.NEXT_PUBLIC_FIRESTORE_ENABLED,
+                familiaId: familia.id,
+            })
+
+            await salvarFamiliaFirestore(familia, password)
+            console.log('[familia] salvamento concluído com sucesso')
+
+            router.push(`${basePath}/familias/${familia.id}`)
+        } catch (error) {
+            console.error('[familia] erro ao salvar', error)
+            const message = error instanceof Error ? error.message : String(error)
+            setErro(`Não foi possível salvar no Firebase. Detalhe: ${message}`)
+            setSalvando(false)
+        } finally {
+            setSalvando(false)
+        }
     }
 
     const inputStyle = {
@@ -133,8 +154,9 @@ export default function NovaFamiliaPage() {
                                 </label>
 
                                 <div style={{ display: "flex", justifyContent: "center" }}>
-                                    <button type="submit">Salvar família</button>
+                                    <button type="submit" disabled={salvando}>{salvando ? "Salvando..." : "Salvar família"}</button>
                                 </div>
+                                {erro && <p role="alert" style={{ margin: 0, color: "#b42318" }}>{erro}</p>}
                             </form>
                         </section>
                     </div>

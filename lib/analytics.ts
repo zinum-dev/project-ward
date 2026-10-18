@@ -1,6 +1,5 @@
-import { Presenca, carregarPresenca } from "./familias"
-import { carregarDiscursos } from "./discursos"
-import { isFirestoreEnabled, carregarPresencaFirestore, carregarDiscursosFirestore } from "./firestore"
+import type { Presenca } from "./familias"
+import { carregarPresencaFirestore, carregarDiscursosFirestore } from "./firestore"
 
 // Generate last N Sundays (most recent first)
 export function gerarUltimosNDomingos(n = 60, reference = new Date()): string[] {
@@ -22,20 +21,14 @@ export function gerarUltimosNDomingos(n = 60, reference = new Date()): string[] 
 }
 
 // Count presences per pessoa over the last N Sundays
-export async function contarPresencasPorPessoa(nDomingos = 60): Promise<Record<string, number>> {
-    let presencas: Presenca[] = []
-    if (isFirestoreEnabled()) {
-        presencas = await carregarPresencaFirestore()
-    } else {
-        presencas = carregarPresenca()
-    }
+export async function contarPresencasPorPessoa(ward: string, nDomingos = 60): Promise<Record<string, number>> {
+    const presencas: Presenca[] = await carregarPresencaFirestore(ward)
 
     const domingos = gerarUltimosNDomingos(nDomingos)
     const setDomingos = new Set(domingos)
 
     const mapa: Record<string, number> = {}
     for (const p of presencas) {
-        if (!p.presente) continue
         if (!setDomingos.has(p.data)) continue
         mapa[p.pessoaId] = (mapa[p.pessoaId] || 0) + 1
     }
@@ -44,13 +37,9 @@ export async function contarPresencasPorPessoa(nDomingos = 60): Promise<Record<s
 }
 
 // Get discursos for a pessoa, supports Firestore or local
-export async function getDiscursosPorPessoa(pessoaId: string) {
-    if (isFirestoreEnabled()) {
-        const docs = await carregarDiscursosFirestore()
-        return docs.filter((d: any) => d.pessoaId === pessoaId)
-    }
-
-    return carregarDiscursos().filter((d) => d.pessoaId === pessoaId)
+export async function getDiscursosPorPessoa(pessoaId: string, ward: string) {
+    const docs = await carregarDiscursosFirestore(ward)
+    return docs.filter((d: any) => d.pessoaId === pessoaId)
 }
 
 export default {

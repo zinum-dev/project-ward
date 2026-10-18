@@ -5,8 +5,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import PageHeader from "@/lib/PageHeader"
 
-import { getUltimosDomingos, carregarDiscursos, salvarDiscursos, adicionarDiscurso, removerDiscurso } from "@/lib/discursos"
-import { carregarFamilias } from "@/lib/familias"
+import { getUltimosDomingos, adicionarDiscurso, removerDiscurso } from "@/lib/discursos"
 import { isFirestoreEnabled, carregarDiscursosFirestore, salvarDiscursosFirestore, carregarFamiliasFirestore } from "@/lib/firestore"
 
 function formatDateDisplay(isoDate: string) {
@@ -37,30 +36,29 @@ export default function DiscursosPage() {
         if (isFirestoreEnabled()) {
             carregarDiscursosFirestore(password).then((docs) => { if (mounted) setDiscursos(docs) }).catch(() => { if (mounted) setDiscursos([]) })
         } else {
-            setDiscursos(carregarDiscursos(password))
+            setDiscursos([])
         }
 
         return () => { mounted = false }
-    }, [])
+    }, [password])
 
     const domingos = useMemo(() => getUltimosDomingos(new Date()).slice().reverse(), [])
 
     const [membros, setMembros] = useState<{ id: string; nome: string; familia: string }[]>([])
+    const [erroFamilias, setErroFamilias] = useState("")
 
     useEffect(() => {
         let mounted = true
-        if (isFirestoreEnabled()) {
-            carregarFamiliasFirestore(password).then((fams) => {
-                if (!mounted) return
-                const list = fams.flatMap((f: any) => f.membros.map((m: any) => ({ ...m, familia: f.nome })))
-                setMembros(list)
-            }).catch(() => { if (mounted) setMembros([]) })
-        } else {
-            setMembros(carregarFamilias(password).flatMap(f => f.membros.map(m => ({ ...m, familia: f.nome }))))
-        }
+        carregarFamiliasFirestore(password).then((fams) => {
+            if (!mounted) return
+            const list = fams.flatMap((familia) => familia.membros.map((membro) => ({ ...membro, familia: familia.nome })))
+            setMembros(list)
+        }).catch(() => {
+            if (mounted) setErroFamilias("Não foi possível carregar os membros do Firebase.")
+        })
 
         return () => { mounted = false }
-    }, [])
+    }, [password])
 
     function handleAdd(data: string, pessoaId: string, tema: string) {
         const membro = membros.find(m => m.id === pessoaId)
@@ -68,8 +66,6 @@ export default function DiscursosPage() {
         const proximo = adicionarDiscurso(discursos, { data, nome: membro.nome, tema, pessoaId })
         if (isFirestoreEnabled()) {
             void salvarDiscursosFirestore(proximo, password).catch(() => { })
-        } else {
-            salvarDiscursos(proximo, password)
         }
         setDiscursos(proximo)
     }
@@ -90,6 +86,8 @@ export default function DiscursosPage() {
                         style={{ padding: 8, border: "1px solid var(--border-color)", background: "transparent", color: "var(--input-text)", width: "100%" }}
                     />
                 </div>
+
+                {erroFamilias && <p role="alert" style={{ textAlign: "center", color: "#b42318" }}>{erroFamilias}</p>}
 
                 <div style={{ display: "grid", gap: 12 }}>
                     {domingos.map((data: string) => {
@@ -118,8 +116,6 @@ export default function DiscursosPage() {
                                                         const proximo = removerDiscurso(discursos, d.id)
                                                         if (isFirestoreEnabled()) {
                                                             void salvarDiscursosFirestore(proximo, password).catch(() => { })
-                                                        } else {
-                                                            salvarDiscursos(proximo, password)
                                                         }
                                                         setDiscursos(proximo)
                                                     }} style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}>Remover</button>

@@ -4,87 +4,84 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { carregarFamiliasEnriquecidas, carregarFamilias, salvarFamilias, type Familia } from "@/lib/familias"
-import { carregarDiscursos, getUltimosDomingos } from "@/lib/discursos"
-import { isFirestoreEnabled, carregarFamiliasFirestore, salvarFamiliasFirestore, carregarPresencaFirestore, carregarDiscursosFirestore } from "@/lib/firestore"
-import { upsertPessoasFromFamilia } from "@/lib/pessoas"
+import { gerarPessoaId, type Familia } from "@/lib/familias"
+import { getUltimosDomingos } from "@/lib/discursos"
+import { carregarFamiliasFirestore, salvarFamiliaFirestore, carregarPresencaFirestore, carregarDiscursosFirestore } from "@/lib/firestore"
 import PageHeader from "@/lib/PageHeader"
+
+type FamiliaDetalhada = Omit<Familia, "membros"> & {
+    membros: Array<Familia["membros"][number] & {
+        ultimoPresenca?: string
+        presencasUltimos3Meses?: number
+    }>
+}
 
 export default function FamiliaDetalhePage() {
     const params = useParams()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
     const id = Array.isArray(params?.id) ? params.id[0] : params?.id
     const basePath = password ? `/ward/${password}` : "/ward"
-    const [familia, setFamilia] = useState<Familia | undefined>(undefined)
-    const [discursos, setDiscursos] = useState<any[]>([])
+    const [familia, setFamilia] = useState<FamiliaDetalhada | undefined>(undefined)
+    const [discursos, setDiscursos] = useState<Array<{ data: string; pessoaId: string; tema?: string }>>([])
+    const [erro, setErro] = useState("")
 
     useEffect(() => {
         let mounted = true
         if (!id) {
-            setFamilia(undefined)
             return
         }
 
         async function load() {
-            if (isFirestoreEnabled()) {
-                try {
-                    const [fams, presencas, disc] = await Promise.all([
-                        carregarFamiliasFirestore(password),
-                        carregarPresencaFirestore(password),
-                        carregarDiscursosFirestore(password),
-                    ])
+            try {
+                const [fams, presencas, disc] = await Promise.all([
+                    carregarFamiliasFirestore(password),
+                    carregarPresencaFirestore(password),
+                    carregarDiscursosFirestore(password),
+                ])
 
-                    // enrich familias with presenca stats
-                    const cutoff = new Date()
-                    cutoff.setMonth(cutoff.getMonth() - 3)
+                const cutoff = new Date()
+                cutoff.setMonth(cutoff.getMonth() - 3)
 
-                    const enriched = fams.map((familia) => ({
-                        ...familia,
-                        membros: familia.membros.map((membro) => {
-                            const registros = presencas.filter((p: any) => p.pessoaId === membro.id && p.presente)
-                            const ultimo = registros.length === 0 ? undefined : registros.slice().sort((a: any, b: any) => (a.data > b.data ? -1 : 1))[0].data
-                            const contagem = registros.filter((r: any) => new Date(r.data) >= cutoff).length
-                            return {
-                                ...membro,
-                                ultimoPresenca: ultimo,
-                                presencasUltimos3Meses: contagem,
-                            }
-                        }),
-                    }))
+                const enriched = fams.map((familia) => ({
+                    ...familia,
+                    membros: familia.membros.map((membro) => {
+                        const registros = presencas.filter((p) => p.pessoaId === membro.id)
+                        const ultimo = registros.length === 0 ? undefined : registros.slice().sort((a, b) => (a.data > b.data ? -1 : 1))[0].data
+                        const contagem = registros.filter((r) => new Date(r.data) >= cutoff).length
+                        return {
+                            ...membro,
+                            ultimoPresenca: ultimo,
+                            presencasUltimos3Meses: contagem,
+                        }
+                    }),
+                }))
 
-                    const encontrada = enriched.find((item) => item.id === id)
-                    if (mounted) setFamilia(encontrada ?? fams.find((item) => item.id === id))
-                    // also set discursos for local use (used below)
-                    if (mounted) setDiscursos(disc)
-                } catch (e) {
-                    if (mounted) setFamilia(carregarFamilias(password).find((item) => item.id === id))
-                }
-            } else {
-                const fams = carregarFamiliasEnriquecidas(password)
-                const encontrada = fams.find((item) => item.id === id)
-                if (mounted) setFamilia(encontrada ?? carregarFamilias(password).find((item) => item.id === id))
-                if (mounted) setDiscursos(carregarDiscursos(password))
+                const encontrada = enriched.find((item) => item.id === id)
+                if (mounted) setFamilia(encontrada ?? fams.find((item) => item.id === id))
+                if (mounted) setDiscursos(disc)
+            } catch {
+                if (mounted) setErro("Não foi possível carregar a família do Firebase.")
             }
         }
 
         load()
 
         return () => { mounted = false }
-    }, [id])
+    }, [id, password])
 
     async function salvarFamiliaAtualizada(proximaFamilia: Familia) {
-        const listagem = isFirestoreEnabled() ? await carregarFamiliasFirestore(password) : carregarFamilias(password)
-        const atualizada = listagem.map((item) => (item.id === proximaFamilia.id ? proximaFamilia : item))
-        if (isFirestoreEnabled()) {
-            await salvarFamiliasFirestore(atualizada, password)
-            // sync pessoas collection
-            await upsertPessoasFromFamilia(proximaFamilia)
-        } else {
-            salvarFamilias(atualizada, password)
-            // update local pessoas cache
-            await upsertPessoasFromFamilia(proximaFamilia)
+        if (!password) {
+            setErro("Senha da ward não definida.")
+            return
         }
-        setFamilia(proximaFamilia)
+
+        try {
+            await salvarFamiliaFirestore(proximaFamilia, password)
+            setErro("")
+            setFamilia(proximaFamilia)
+        } catch {
+            setErro("Não foi possível salvar as alterações no Firebase.")
+        }
     }
 
     function handleFamiliaChange(field: "nome" | "telefone" | "endereco" | "observacoes", valor: string) {
@@ -97,7 +94,7 @@ export default function FamiliaDetalhePage() {
             [field]: valor,
         }
 
-        salvarFamiliaAtualizada(familiaAtualizada)
+        setFamilia(familiaAtualizada)
     }
 
     function handleAdicionarMembro() {
@@ -106,11 +103,10 @@ export default function FamiliaDetalhePage() {
         }
 
         const membroNovo: Familia["membros"][number] = {
-            id: `membro-${Date.now()}`,
+            id: gerarPessoaId(),
             nome: "Novo membro",
             responsavel: false,
             observacoes: "",
-            ultimoDiscurso: undefined,
         }
 
         const familiaAtualizada: Familia = {
@@ -161,7 +157,10 @@ export default function FamiliaDetalhePage() {
             }))
         }
 
-        void salvarFamiliaAtualizada(familiaAtualizada)
+        setFamilia(familiaAtualizada)
+        if (typeof valor === "boolean") {
+            void salvarFamiliaAtualizada(familiaAtualizada)
+        }
     }
 
     function handleRemoverMembro(membroId: string) {
@@ -206,8 +205,10 @@ export default function FamiliaDetalhePage() {
                         <Link href={`${basePath}/familias`}>Voltar para famílias</Link>
                     </div>
 
-                    {!familia ? (
-                        <p>Família não encontrada.</p>
+                    {erro ? (
+                        <p role="alert" style={{ color: "#b42318" }}>{erro}</p>
+                    ) : !familia ? (
+                        <p>Carregando família...</p>
                     ) : (
                         <div style={{ display: "grid", gap: 24 }}>
                             <section style={{ display: "grid", gap: 12, border: "1px solid var(--border-color)", padding: 16, borderRadius: 12 }}>
@@ -218,6 +219,7 @@ export default function FamiliaDetalhePage() {
                                     <input
                                         value={familia.nome}
                                         onChange={(event) => handleFamiliaChange("nome", event.target.value)}
+                                        onBlur={() => void salvarFamiliaAtualizada(familia)}
                                         style={inputStyle}
                                     />
                                 </label>
@@ -228,6 +230,7 @@ export default function FamiliaDetalhePage() {
                                     <textarea
                                         value={familia.observacoes ?? ""}
                                         onChange={(event) => handleFamiliaChange("observacoes", event.target.value)}
+                                        onBlur={() => void salvarFamiliaAtualizada(familia)}
                                         rows={4}
                                         style={{ ...inputStyle, resize: "vertical" }}
                                     />
@@ -245,7 +248,6 @@ export default function FamiliaDetalhePage() {
                                 ) : (
                                     familia.membros.map((membro) => {
                                         // compute last discurso for this member
-                                        const discursos = carregarDiscursos(password)
                                         const porPessoa = discursos.filter(d => d.pessoaId === membro.id).slice().sort((a, b) => (a.data < b.data ? 1 : -1))
                                         const ultimo = porPessoa[0]
                                         function fmt(iso: string | undefined) {
@@ -257,12 +259,20 @@ export default function FamiliaDetalhePage() {
                                             return `${dd}-${mm}-${yyyy}`
                                         }
                                         const totalDomingos = getUltimosDomingos().length
-                                        const presentesUltimos3Meses = (membro as any).presencasUltimos3Meses ?? 0
+                                        const presentesUltimos3Meses = membro.presencasUltimos3Meses ?? 0
 
                                         return (
                                             <div key={membro.id} style={{ display: "grid", gap: 10, border: "1px solid var(--border-color)", padding: 12, borderRadius: 12 }}>
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                                    <strong>{membro.nome || "Novo membro"}</strong>
+                                                    <label style={{ display: "grid", gap: 6, flex: "1 1 220px" }}>
+                                                        Nome do membro
+                                                        <input
+                                                            value={membro.nome}
+                                                            onChange={(event) => handleAtualizarMembro(membro.id, "nome", event.target.value)}
+                                                            onBlur={() => void salvarFamiliaAtualizada(familia)}
+                                                            style={memberInputStyle}
+                                                        />
+                                                    </label>
                                                     <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                                         <input
                                                             type="checkbox"
@@ -290,6 +300,7 @@ export default function FamiliaDetalhePage() {
                                                     <textarea
                                                         value={membro.observacoes ?? ""}
                                                         onChange={(event) => handleAtualizarMembro(membro.id, "observacoes", event.target.value)}
+                                                        onBlur={() => void salvarFamiliaAtualizada(familia)}
                                                         rows={3}
                                                         style={{ ...memberInputStyle, resize: "vertical" }}
                                                     />

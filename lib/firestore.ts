@@ -7,7 +7,7 @@ import {
     setDoc,
     serverTimestamp,
 } from "firebase/firestore";
-import { Presenca, STORAGE_PRESENCA_KEY, Familia, STORAGE_FAMILIAS_KEY } from "./familias";
+import { Presenca, Familia } from "./familias";
 const STORAGE_DISCURSOS_KEY = "ward.discursos";
 
 function localKey(base: string, ward?: string) {
@@ -22,6 +22,18 @@ type FirebaseConfig = {
     messagingSenderId?: string;
     appId?: string;
 };
+
+export function removerUndefined(value: unknown): unknown {
+    if (Array.isArray(value)) {
+        return value.map(removerUndefined);
+    }
+    if (value !== null && typeof value === "object") {
+        return Object.fromEntries(
+            Object.entries(value).filter(([, item]) => item !== undefined).map(([key, item]) => [key, removerUndefined(item)])
+        );
+    }
+    return value;
+}
 
 let app: FirebaseApp | null = null;
 
@@ -57,17 +69,10 @@ export async function getFirestoreInstance() {
     return getFirestore();
 }
 
-// Convert Firestore per-date docs (id = ISO date, field `presentes: string[]`) to existing Presenca[] shape
+// Convert per-date status maps, including legacy arrays, into member records.
 export async function carregarPresencaFirestore(ward?: string): Promise<Presenca[]> {
     if (!isFirestoreEnabled()) {
-        // fallback to localStorage
-        if (typeof window === "undefined") return [];
-        try {
-            const raw = window.localStorage.getItem(localKey('presenca', ward));
-            return raw ? (JSON.parse(raw) as Presenca[]) : [];
-        } catch {
-            return [];
-        }
+        return [];
     }
 
     const db = await getFirestoreInstance();
@@ -76,60 +81,64 @@ export async function carregarPresencaFirestore(ward?: string): Promise<Presenca
 
     const resultado: Presenca[] = [];
     snapshot.forEach((d) => {
-        const presentes = (d.data() as any).presentes as string[] | undefined;
+        const dados = d.data();
         const dataId = d.id; // expected ISO date
-        if (Array.isArray(presentes)) {
-            presentes.forEach((pessoaId) => {
+        const statusPorPessoa = dados.statusPorPessoa as Record<string, Presenca["estado"]> | undefined;
+
+        if (statusPorPessoa && typeof statusPorPessoa === "object") {
+            Object.entries(statusPorPessoa).forEach(([pessoaId, estado]) => {
+                if (estado === "presente" || estado === "online" || estado === "estaca") {
                 resultado.push({
                     id: `${dataId}-${pessoaId}`,
                     data: dataId,
                     pessoaId,
-                    presente: true,
+                    estado,
                 });
+                }
             });
+            return;
         }
-    });
 
-    // If remote has no data, try to seed from localStorage (useful on first-run)
-    if (resultado.length === 0 && typeof window !== "undefined") {
-        try {
-            const raw = window.localStorage.getItem(localKey('presenca', ward));
-            const local = raw ? (JSON.parse(raw) as Presenca[]) : [];
-            if (Array.isArray(local) && local.length > 0) {
-                // push local to firestore and return local
-                await salvarPresencaFirestore(local, ward);
-                return local;
+        const estadosLegados = [
+            ["presente", dados.presentes],
+            ["online", dados.online],
+            ["estaca", dados.estaca],
+        ] as const;
+        estadosLegados.forEach(([estado, pessoas]) => {
+            if (Array.isArray(pessoas)) {
+                pessoas.forEach((pessoaId) => resultado.push({
+                    id: `${dataId}-${pessoaId}`,
+                    data: dataId,
+                    pessoaId,
+                    estado,
+                }));
             }
-        } catch {
-            // ignore and return empty
-        }
-    }
+        });
+    });
 
     return resultado;
 }
 
-// Save the full Presenca[] to Firestore as docs per-date with `presentes: string[]`
-export async function salvarPresencaFirestore(presencas: Presenca[], ward?: string): Promise<void> {
+// Save attendance states in a person-id keyed map, one Firestore document per date.
+export async function salvarPresencaFirestore(presencas: Presenca[], ward?: string, datasAtualizadas: string[] = []): Promise<void> {
     if (!isFirestoreEnabled()) {
-        if (typeof window === "undefined") return;
-        window.localStorage.setItem(localKey('presenca', ward), JSON.stringify(presencas));
         return;
     }
 
     const db = await getFirestoreInstance();
 
-    // group by date
-    const porData = presencas.reduce<Record<string, string[]>>((acc, p) => {
-        if (!p.presente) return acc;
-        acc[p.data] = acc[p.data] || [];
-        if (!acc[p.data].includes(p.pessoaId)) acc[p.data].push(p.pessoaId);
-        return acc;
-    }, {});
+    const porData = new Map<string, Record<string, Presenca["estado"]>>();
+    presencas.forEach(({ data, pessoaId, estado }) => {
+        const statusPorPessoa = porData.get(data) ?? {};
+        statusPorPessoa[pessoaId] = estado;
+        porData.set(data, statusPorPessoa);
+    });
 
-    const promises = Object.entries(porData).map(([data, presentes]) => {
+    const datasParaSalvar = new Set([...porData.keys(), ...datasAtualizadas]);
+    const promises = [...datasParaSalvar].map((data) => {
         const ref = ward ? doc(db, "wards", ward, "presencas", data) : doc(db, "presencas", data);
         return setDoc(ref, {
-            presentes,
+            statusPorPessoa: porData.get(data) ?? {},
             updatedAt: serverTimestamp(),
         })
     });
@@ -140,13 +149,7 @@ export async function salvarPresencaFirestore(presencas: Presenca[], ward?: stri
 // Families: store one document per family under collection `familias`
 export async function carregarFamiliasFirestore(ward?: string): Promise<Familia[]> {
     if (!isFirestoreEnabled()) {
-        if (typeof window === "undefined") return [];
-        try {
-            const raw = window.localStorage.getItem(localKey('familias', ward));
-            return raw ? (JSON.parse(raw) as Familia[]) : [];
-        } catch {
-            return [];
-        }
+        return [];
     }
 
     const db = await getFirestoreInstance();
@@ -157,47 +160,56 @@ export async function carregarFamiliasFirestore(ward?: string): Promise<Familia[
         resultado.push(d.data() as Familia);
     });
 
-    if (resultado.length === 0 && typeof window !== "undefined") {
-        try {
-            const raw = window.localStorage.getItem(localKey('familias', ward));
-            const local = raw ? (JSON.parse(raw) as Familia[]) : [];
-            if (Array.isArray(local) && local.length > 0) {
-                // seed remote
-                await salvarFamiliasFirestore(local, ward);
-                return local;
-            }
-        } catch {
-            // ignore
-        }
-    }
     return resultado;
+}
+
+export async function salvarFamiliaFirestore(familia: Familia, ward?: string): Promise<void> {
+    if (!isFirestoreEnabled()) {
+        throw new Error("Firestore is not enabled")
+    }
+
+    const db = await getFirestoreInstance();
+    const ref = ward ? doc(db, "wards", ward, "familias", familia.id) : doc(db, "familias", familia.id);
+    await setDoc(ref, { ...(removerUndefined(familia) as Familia), updatedAt: serverTimestamp() });
 }
 
 export async function salvarFamiliasFirestore(familias: Familia[], ward?: string): Promise<void> {
     if (!isFirestoreEnabled()) {
-        if (typeof window === "undefined") return;
-        window.localStorage.setItem(localKey('familias', ward), JSON.stringify(familias));
+        console.warn('[firestore] Firestore desativado', {
+            enabled: process.env.NEXT_PUBLIC_FIRESTORE_ENABLED,
+            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        })
         return;
     }
 
-    const db = await getFirestoreInstance();
-    const promises = familias.map((f) => {
-        const ref = ward ? doc(db, "wards", ward, "familias", f.id) : doc(db, "familias", f.id);
-        return setDoc(ref, { ...f, updatedAt: serverTimestamp() });
-    });
-    await Promise.all(promises);
+    console.log('[firestore] iniciar salvarFamiliasFirestore', {
+        ward,
+        count: familias.length,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    })
+
+    try {
+        const db = await getFirestoreInstance();
+        console.log('[firestore] instância recebida', !!db)
+
+        const promises = familias.map((f) => {
+            const ref = ward ? doc(db, "wards", ward, "familias", f.id) : doc(db, "familias", f.id);
+            console.log('[firestore] preparando setDoc', { ward, docId: f.id, path: ref.path })
+            return setDoc(ref, { ...(removerUndefined(f) as Familia), updatedAt: serverTimestamp() });
+        });
+
+        await Promise.all(promises);
+        console.log('[firestore] setDoc concluído para todas as familias')
+    } catch (error) {
+        console.error('[firestore] falha ao salvar familias no Firestore', error)
+        throw error
+    }
 }
 
 // Discursos: one document per discurso in collection `discursos`
 export async function carregarDiscursosFirestore(ward?: string): Promise<any[]> {
     if (!isFirestoreEnabled()) {
-        if (typeof window === "undefined") return [];
-        try {
-            const raw = window.localStorage.getItem(localKey('discursos', ward));
-            return raw ? JSON.parse(raw) : [];
-        } catch {
-            return [];
-        }
+        return [];
     }
 
     const db = await getFirestoreInstance();
@@ -206,25 +218,11 @@ export async function carregarDiscursosFirestore(ward?: string): Promise<any[]> 
     const resultado: any[] = [];
     snapshot.forEach((d) => resultado.push({ id: d.id, ...(d.data() as any) }));
 
-    if (resultado.length === 0 && typeof window !== "undefined") {
-        try {
-            const raw = window.localStorage.getItem(localKey('discursos', ward));
-            const local = raw ? JSON.parse(raw) : [];
-            if (Array.isArray(local) && local.length > 0) {
-                await salvarDiscursosFirestore(local, ward);
-                return local;
-            }
-        } catch {
-            // ignore
-        }
-    }
     return resultado;
 }
 
 export async function salvarDiscursosFirestore(lista: any[], ward?: string): Promise<void> {
     if (!isFirestoreEnabled()) {
-        if (typeof window === "undefined") return;
-        window.localStorage.setItem(localKey('discursos', ward), JSON.stringify(lista));
         return;
     }
 
@@ -242,6 +240,7 @@ export default {
     carregarPresencaFirestore,
     salvarPresencaFirestore,
     carregarFamiliasFirestore,
+    salvarFamiliaFirestore,
     salvarFamiliasFirestore,
     carregarDiscursosFirestore,
     salvarDiscursosFirestore,

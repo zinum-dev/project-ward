@@ -4,8 +4,8 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { carregarFamilias, type Familia } from "@/lib/familias"
-import { isFirestoreEnabled, carregarFamiliasFirestore } from "@/lib/firestore"
+import { type Familia } from "@/lib/familias"
+import { carregarFamiliasFirestore } from "@/lib/firestore"
 import PageHeader from "@/lib/PageHeader"
 
 export default function FamiliasPage() {
@@ -13,18 +13,15 @@ export default function FamiliasPage() {
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
     const basePath = password ? `/ward/${password}` : "/ward"
     const [familias, setFamilias] = useState<Familia[]>([])
+    const [erro, setErro] = useState("")
 
     useEffect(() => {
         let mounted = true
-        if (isFirestoreEnabled()) {
-            carregarFamiliasFirestore(password).then((fams) => {
-                if (mounted) setFamilias(fams)
-            }).catch(() => {
-                if (mounted) setFamilias([])
-            })
-        } else {
-            setFamilias(carregarFamilias(password))
-        }
+        carregarFamiliasFirestore(password).then((fams) => {
+            if (mounted) setFamilias(fams)
+        }).catch(() => {
+            if (mounted) setErro("Não foi possível carregar as famílias do Firebase.")
+        })
 
         return () => { mounted = false }
     }, [password])
@@ -43,6 +40,8 @@ export default function FamiliasPage() {
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                         <Link href={`${basePath}/familias/nova`}>Nova família</Link>
                     </div>
+
+                    {erro && <p role="alert" style={{ textAlign: "center", color: "#b42318" }}>{erro}</p>}
 
                     <div style={{ display: "grid", gap: 12, margin: "0 auto", width: "min(640px, 100%)" }}>
                         {familias.map((familia) => {
