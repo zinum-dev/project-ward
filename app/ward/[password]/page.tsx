@@ -19,7 +19,7 @@ export default function WardPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(560px, 90vw)", textAlign: "center" }}>
                 <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Ward: {password}</h1>
             </div>

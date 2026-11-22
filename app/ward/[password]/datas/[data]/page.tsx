@@ -50,31 +50,28 @@ export default function DataDetalhePage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(560px, 90vw)" }}>
-                <div style={{ textAlign: "center" }}>
-                    <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>Data: {data ? formatDateDisplay(data) : "não informada"}</h1>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                    <Link className="outline-action" href={`${basePath}/datas`}>Voltar</Link>
+                    <h1 style={{ margin: 0, textAlign: "right" }}>
+                        {data ? formatDateDisplay(data) : "Data não informada"}
+                    </h1>
                 </div>
 
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                        <Link href={`${basePath}/datas`}>Voltar para datas</Link>
-                    </div>
+                <p style={{ textAlign: "left", marginBottom: 16 }}>Presentes marcados:</p>
 
-                    <p style={{ textAlign: "center", marginBottom: 16 }}>Presentes marcados:</p>
+                {erro && <p role="alert" style={{ textAlign: "left", color: "#b42318" }}>{erro}</p>}
 
-                    {erro && <p role="alert" style={{ textAlign: "center", color: "#b42318" }}>{erro}</p>}
-
-                    {presentes.length === 0 ? (
-                        <p style={{ textAlign: "center" }}>Nenhuma pessoa marcada como presente.</p>
-                    ) : (
-                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8, textAlign: "center" }}>
-                            {presentes.map((pessoa) => (
-                                <li key={pessoa.id}>{pessoa.nome} ({pessoa.estado})</li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
+                {presentes.length === 0 ? (
+                    <p style={{ textAlign: "left" }}>Nenhuma pessoa marcada como presente.</p>
+                ) : (
+                    <ol style={{ paddingLeft: 24, margin: 0, display: "grid", gap: 8, textAlign: "left" }}>
+                        {presentes.map((pessoa) => (
+                            <li key={pessoa.id}>{pessoa.nome} ({pessoa.estado})</li>
+                        ))}
+                    </ol>
+                )}
             </div>
         </div>
     )

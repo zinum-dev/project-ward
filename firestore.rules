@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function isBootstrapAdmin() {
-      return signedIn() && request.auth.token.email == 'andre.zinum@gmail.com';
+      return signedIn() && request.auth.uid == 'P9PW6BPM5JbFRiIJYETYln7k4mm1';
     }
 
     function isAllowedForWard(wardId) {
@@ -24,6 +24,11 @@ service cloud.firestore {
       allow get: if isBootstrapAdmin() || (signedIn() && request.auth.token.email == email);
       allow list: if isBootstrapAdmin();
       allow create, update, delete: if isBootstrapAdmin();
+    }
+
+    match /accessRequests/{requestId} {
+      allow read, update, delete: if isBootstrapAdmin();
+      allow create: if false;
     }
 
     match /wards/{wardId}/familias/{familiaId} {

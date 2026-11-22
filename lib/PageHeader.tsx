@@ -1,24 +1,71 @@
 "use client"
 
 import Link from "next/link"
-import React from "react"
-import { useWardAccess } from "@/components/ward-access-guard"
+import { usePathname, useParams } from "next/navigation"
+import { useState } from "react"
 
-export default function PageHeader({ title, basePath }: { title: string; basePath: string }) {
-    const { isAdmin } = useWardAccess()
+import { SettingsMenu } from "@/components/settings-menu"
+import { useWardAccess } from "@/components/ward-access-guard"
+import { sairDoFirebase } from "@/lib/firebase-auth"
+
+export default function PageHeader() {
+    const params = useParams()
+    const pathname = usePathname()
+    const { user, isAdmin } = useWardAccess()
+    const [menuAberto, setMenuAberto] = useState(false)
+    const passwordParam = params?.password
+    const password = Array.isArray(passwordParam) ? passwordParam[0] : passwordParam
+    const basePath = password ? `/ward/${encodeURIComponent(password)}` : "/ward"
+    const links = [
+        { href: `${basePath}/familias`, label: "Famílias" },
+        { href: `${basePath}/datas`, label: "Domingos" },
+        { href: `${basePath}/discursos`, label: "Discursos" },
+        { href: `${basePath}/presenca`, label: "Presença" },
+        ...(isAdmin ? [{ href: `${basePath}/acessos`, label: "Acessos" }] : []),
+    ]
 
     return (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h1 style={{ margin: 0, paddingBottom: 8, borderBottom: "1px solid var(--border-color)", display: "inline-block" }}>{title}</h1>
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-                <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
-                    <Link href={`${basePath}/familias`}>Famílias</Link>
-                    <Link href={`${basePath}/datas`}>Domingos</Link>
-                    <Link href={`${basePath}/discursos`}>Discursos</Link>
-                    <Link href={`${basePath}/presenca`}>Presença</Link>
-                    {isAdmin && <Link href={`${basePath}/acessos`}>Acessos</Link>}
-                </div>
-            </div>
-        </div>
+        <header className="page-header">
+            <button
+                type="button"
+                className="page-header-menu-toggle"
+                aria-label={menuAberto ? "Fechar menu de navegação" : "Abrir menu de navegação"}
+                aria-expanded={menuAberto}
+                aria-controls="ward-navigation"
+                onClick={() => setMenuAberto((aberto) => !aberto)}
+            >
+                <span />
+                <span />
+                <span />
+            </button>
+
+            <nav
+                id="ward-navigation"
+                className={`page-header-nav${menuAberto ? " is-open" : ""}`}
+                aria-label="Navegação da ala"
+            >
+                {links.map(({ href, label }) => {
+                    const ativo = pathname === href || pathname.startsWith(`${href}/`)
+
+                    return (
+                        <Link
+                            key={href}
+                            href={href}
+                            className={`page-header-link${ativo ? " is-active" : ""}`}
+                            aria-current={ativo ? "page" : undefined}
+                            onClick={() => setMenuAberto(false)}
+                        >
+                            {label}
+                        </Link>
+                    )
+                })}
+            </nav>
+
+            <SettingsMenu
+                inline
+                email={user?.email}
+                onSignOut={() => void sairDoFirebase()}
+            />
+        </header>
     )
 }

@@ -7,7 +7,6 @@ import { useEffect, useState } from "react"
 import { gerarPessoaId, type Familia } from "@/lib/familias"
 import { getUltimosDomingos } from "@/lib/discursos"
 import { carregarFamiliasFirestore, salvarFamiliaFirestore, carregarPresencaFirestore, carregarDiscursosFirestore } from "@/lib/firestore"
-import PageHeader from "@/lib/PageHeader"
 
 type FamiliaDetalhada = Omit<Familia, "membros"> & {
     membros: Array<Familia["membros"][number] & {
@@ -196,10 +195,8 @@ export default function FamiliaDetalhePage() {
     } as const
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <PageHeader title={"Famílias"} basePath={basePath} />
-
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ textAlign: "center", margin: "0 0 20px" }}>
                         <Link href={`${basePath}/familias`}>Voltar para famílias</Link>
@@ -323,5 +320,3 @@ export default function FamiliaDetalhePage() {
         </div>
     )
 }
-
-// Header replaced by shared PageHeader component

@@ -74,6 +74,17 @@ Regras de negócio relevantes:
 - Dados antigos eventualmente existentes no `localStorage` não são lidos nem migrados automaticamente.
 - Preferências de interface, como o tema visual, podem continuar no armazenamento local do navegador; não são dados da ward.
 
+## Solicitações de acesso
+- Cada pedido aprovado ou pendente é armazenado em `accessRequests/{requestId}`.
+- Campos:
+  - `email`: endereço Gmail normalizado.
+  - `wardId`: ala solicitada.
+  - `status`: `pending`, `approved` ou `rejected`.
+  - `captchaVerified`: indica que o token reCAPTCHA foi validado no servidor antes da gravação.
+  - `approvedAt` ou `rejectedAt`: timestamps conforme a decisão.
+- Pedidos são criados somente pelos Route Handlers do servidor, não por gravação pública direta no Firestore.
+- A leitura e aprovação são restritas ao administrador global pelas regras do Firestore.
+
 ---
 
 > Atualizado em 2026-10-18.

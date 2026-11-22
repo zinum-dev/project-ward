@@ -1,9 +1,7 @@
 'use client'
 
-import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import PageHeader from "@/lib/PageHeader"
 
 import { getUltimosDomingos, adicionarDiscurso, removerDiscurso } from "@/lib/discursos"
 import { isFirestoreEnabled, carregarDiscursosFirestore, salvarDiscursosFirestore, carregarFamiliasFirestore } from "@/lib/firestore"
@@ -26,7 +24,6 @@ type Discurso = {
 export default function DiscursosPage() {
     const params = useParams()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
-    const basePath = password ? `/ward/${password}` : "/ward"
 
     const [discursos, setDiscursos] = useState<Discurso[]>([])
     const [filtro, setFiltro] = useState("")
@@ -73,10 +70,8 @@ export default function DiscursosPage() {
     const filterLower = filtro.trim().toLowerCase()
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <PageHeader title={"Discursos"} basePath={basePath} />
-
                 <div style={{ marginBottom: 16, textAlign: "center" }}>
                     <input
                         type="text"

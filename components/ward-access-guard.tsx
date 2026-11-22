@@ -11,6 +11,7 @@ import {
     sairDoFirebase,
     usuarioTemAcessoAWard,
 } from "@/lib/firebase-auth"
+import { SettingsMenu } from "@/components/settings-menu"
 
 type AccessContextValue = {
     user: User | null
@@ -82,17 +83,17 @@ export default function WardAccessGuard({ children }: { children: ReactNode }) {
                     : "Entre com sua conta Google autorizada."
 
         return (
-            <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
-                <section style={{ width: "min(420px, 100%)", display: "grid", gap: 16, textAlign: "center" }}>
-                    <h1 style={{ margin: 0 }}>Acesso à ward</h1>
-                    <p role="status" style={{ margin: 0 }}>{message}</p>
-                    {error && <p role="alert" style={{ margin: 0, color: "#b42318" }}>{error}</p>}
-                    {status === "signed-out" && <button type="button" onClick={() => void handleGoogleSignIn()}>Entrar com Google</button>}
-                    {(status === "denied" || status === "error") && (
-                        <button type="button" onClick={() => void handleSignOut()}>Sair da conta</button>
-                    )}
-                </section>
-            </main>
+            <>
+                <SettingsMenu email={user?.email} onSignOut={user ? handleSignOut : undefined} />
+                <main className="screen-content screen-content--standalone" style={{ padding: 24 }}>
+                    <section style={{ width: "min(420px, 100%)", display: "grid", gap: 16, textAlign: "center" }}>
+                        <h1 style={{ margin: 0 }}>Acesso à ward</h1>
+                        <p role="status" style={{ margin: 0 }}>{message}</p>
+                        {error && <p role="alert" style={{ margin: 0, color: "#b42318" }}>{error}</p>}
+                        {status === "signed-out" && <button type="button" onClick={() => void handleGoogleSignIn()}>Entrar com Google</button>}
+                    </section>
+                </main>
+            </>
         )
     }
 
@@ -100,10 +101,6 @@ export default function WardAccessGuard({ children }: { children: ReactNode }) {
 
     return (
         <AccessContext.Provider value={{ user, isAdmin }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "8px 120px 8px 16px" }}>
-                <span style={{ overflowWrap: "anywhere" }}>{user?.email}</span>
-                <button type="button" onClick={() => void handleSignOut()}>Sair</button>
-            </div>
             {children}
         </AccessContext.Provider>
     )

@@ -14,13 +14,16 @@ import {
     doc,
     getDoc,
     getDocs,
+    query,
     serverTimestamp,
     setDoc,
+    updateDoc,
+    where,
 } from "firebase/firestore"
 
 import { getFirestoreInstance, initFirebase } from "./firestore"
 
-export const BOOTSTRAP_ADMIN_EMAIL = "andre.zinum@gmail.com"
+export const BOOTSTRAP_ADMIN_UID = "P9PW6BPM5JbFRiIJYETYln7k4mm1"
 
 function getFirebaseAuth() {
     initFirebase()
@@ -43,7 +46,7 @@ export async function sairDoFirebase() {
 }
 
 export function isBootstrapAdmin(user: User | null) {
-    return user?.email?.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL
+    return user?.uid === BOOTSTRAP_ADMIN_UID
 }
 
 export async function usuarioTemAcessoAWard(user: User, ward: string): Promise<boolean> {
@@ -60,6 +63,64 @@ export async function usuarioTemAcessoAWard(user: User, ward: string): Promise<b
 export type UsuarioPermitido = {
     email: string
     wards: string[]
+}
+
+export type SolicitacaoAcesso = {
+    id: string
+    email: string
+    wardId: string
+    status: "pending" | "approved" | "rejected"
+    createdAt?: string
+}
+
+export async function listarSolicitacoesAcesso(ward: string): Promise<SolicitacaoAcesso[]> {
+    const db = await getFirestoreInstance()
+    const snapshot = await getDocs(query(
+        collection(db, "accessRequests"),
+        where("wardId", "==", ward),
+        where("status", "==", "pending"),
+    ))
+
+    return snapshot.docs.map((item) => {
+        const data = item.data()
+        return {
+            id: item.id,
+            email: String(data.email ?? ""),
+            wardId: String(data.wardId ?? ward),
+            status: data.status,
+            createdAt: typeof data.createdAt === "string" ? data.createdAt : undefined,
+        }
+    })
+}
+
+export async function aprovarSolicitacaoAcesso(requestId: string, email: string, ward: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase()
+    const normalizedWard = ward.trim().toLowerCase()
+    const db = await getFirestoreInstance()
+    const accessRef = doc(db, "allowedUsers", normalizedEmail)
+    const accessSnapshot = await getDoc(accessRef)
+    const wards = Array.isArray(accessSnapshot.data()?.wards) ? accessSnapshot.data()?.wards as string[] : []
+
+    await setDoc(accessRef, {
+        email: normalizedEmail,
+        wards: [...new Set([...wards, normalizedWard])],
+        updatedAt: serverTimestamp(),
+    }, { merge: true })
+
+    await updateDoc(doc(db, "accessRequests", requestId), {
+        status: "approved",
+        approvedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    })
+}
+
+export async function rejeitarSolicitacaoAcesso(requestId: string): Promise<void> {
+    const db = await getFirestoreInstance()
+    await updateDoc(doc(db, "accessRequests", requestId), {
+        status: "rejected",
+        rejectedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    })
 }
 
 export async function listarUsuariosPermitidos(): Promise<UsuarioPermitido[]> {
@@ -90,7 +151,8 @@ export async function salvarUsuarioPermitido(email: string, wards: string[]): Pr
 
 export async function removerUsuarioPermitido(email: string): Promise<void> {
     const normalizedEmail = email.trim().toLowerCase()
-    if (normalizedEmail === BOOTSTRAP_ADMIN_EMAIL) {
+    const currentUser = getAuth().currentUser
+    if (currentUser && isBootstrapAdmin(currentUser) && currentUser.email?.toLowerCase() === normalizedEmail) {
         throw new Error("O administrador inicial não pode ser removido.")
     }
 

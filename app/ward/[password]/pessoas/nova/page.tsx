@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import PageHeader from "@/lib/PageHeader"
 
 export default function Page() {
     const params = useParams()
@@ -14,10 +13,8 @@ export default function Page() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(560px, 90vw)" }}>
-                <PageHeader title={"Nova pessoa"} basePath={basePath} />
-
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ display: "grid", gap: 8 }}>
                         <label>

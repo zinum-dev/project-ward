@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import PageHeader from "@/lib/PageHeader"
 import { type Presenca } from "@/lib/familias"
 import { carregarPresencaFirestore } from "@/lib/firestore"
 
@@ -62,16 +61,14 @@ export default function DatasPage() {
     if (!password) return <div>Senha não definida</div>
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(560px, 90vw)" }}>
-                <PageHeader title={"Domingos"} basePath={basePath} />
-
                 {erro && <p role="alert" style={{ color: "#b42318", textAlign: "center" }}>{erro}</p>}
 
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
                     {datas.map((data) => (
                         <li key={data} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                            <Link href={`${basePath}/datas/${data}`}>{formatDateDisplay(data)}</Link>
+                            <Link className="outline-action" href={`${basePath}/datas/${data}`}>{formatDateDisplay(data)}</Link>
                             <span>{(contagemPorData.get(data) ?? 0)} pessoas marcadas</span>
                         </li>
                     ))}

@@ -4,18 +4,26 @@ import { FormEvent, useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 
 import { useWardAccess } from "@/components/ward-access-guard"
-import { listarUsuariosPermitidos, removerUsuarioPermitido, salvarUsuarioPermitido, type UsuarioPermitido } from "@/lib/firebase-auth"
-import PageHeader from "@/lib/PageHeader"
+import {
+    aprovarSolicitacaoAcesso,
+    listarSolicitacoesAcesso,
+    listarUsuariosPermitidos,
+    rejeitarSolicitacaoAcesso,
+    removerUsuarioPermitido,
+    salvarUsuarioPermitido,
+    type SolicitacaoAcesso,
+    type UsuarioPermitido,
+} from "@/lib/firebase-auth"
 
 export default function AcessosPage() {
     const params = useParams()
     const password = Array.isArray(params?.password) ? params.password[0] : params?.password
-    const basePath = password ? `/ward/${password}` : "/ward"
     const { isAdmin } = useWardAccess()
     const [usuarios, setUsuarios] = useState<UsuarioPermitido[]>([])
     const [email, setEmail] = useState("")
     const [wards, setWards] = useState("")
     const [wardsEditadas, setWardsEditadas] = useState<Record<string, string>>({})
+    const [solicitacoes, setSolicitacoes] = useState<SolicitacaoAcesso[]>([])
     const [erro, setErro] = useState("")
     const [salvando, setSalvando] = useState(false)
 
@@ -23,22 +31,27 @@ export default function AcessosPage() {
         const lista = await listarUsuariosPermitidos()
         setUsuarios(lista)
         setWardsEditadas(Object.fromEntries(lista.map((usuario) => [usuario.email, usuario.wards.join(", ")])))
+        if (password) setSolicitacoes(await listarSolicitacoesAcesso(password))
     }
 
     useEffect(() => {
         if (!isAdmin) return
 
         let active = true
-        listarUsuariosPermitidos().then((lista) => {
+        Promise.all([
+            listarUsuariosPermitidos(),
+            password ? listarSolicitacoesAcesso(password) : Promise.resolve([]),
+        ]).then(([lista, requests]) => {
             if (!active) return
             setUsuarios(lista)
+            setSolicitacoes(requests)
             setWardsEditadas(Object.fromEntries(lista.map((usuario) => [usuario.email, usuario.wards.join(", ")])))
         }).catch((reason: unknown) => {
             if (active) setErro(reason instanceof Error ? reason.message : String(reason))
         })
 
         return () => { active = false }
-    }, [isAdmin])
+    }, [isAdmin, password])
 
     function lerWards(valor: string) {
         return valor.split(/[\n,]/).map((ward) => ward.trim().toLowerCase()).filter(Boolean)
@@ -80,13 +93,32 @@ export default function AcessosPage() {
         }
     }
 
+    async function handleApprove(solicitacao: SolicitacaoAcesso) {
+        setErro("")
+        try {
+            await aprovarSolicitacaoAcesso(solicitacao.id, solicitacao.email, solicitacao.wardId)
+            await carregarLista()
+        } catch (reason) {
+            setErro(reason instanceof Error ? reason.message : String(reason))
+        }
+    }
+
+    async function handleReject(solicitacao: SolicitacaoAcesso) {
+        setErro("")
+        try {
+            await rejeitarSolicitacaoAcesso(solicitacao.id)
+            await carregarLista()
+        } catch (reason) {
+            setErro(reason instanceof Error ? reason.message : String(reason))
+        }
+    }
+
     if (!password) return <div>Ward não definida</div>
     if (!isAdmin) return <div>Acesso restrito ao administrador.</div>
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "32px 0" }}>
+        <div className="screen-content">
             <div style={{ width: "min(760px, 92vw)" }}>
-                <PageHeader title="Acessos" basePath={basePath} />
                 <main style={{ display: "grid", gap: 24 }}>
                     <form onSubmit={handleSubmit} style={{ display: "grid", gap: 10 }}>
                         <h2 style={{ margin: 0 }}>Adicionar email</h2>
@@ -113,6 +145,18 @@ export default function AcessosPage() {
                     </form>
 
                     {erro && <p role="alert" style={{ margin: 0, color: "#b42318" }}>{erro}</p>}
+
+                    <section style={{ display: "grid", gap: 12 }}>
+                        <h2 style={{ margin: 0 }}>Solicitações pendentes</h2>
+                        {solicitacoes.map((solicitacao) => (
+                            <div key={solicitacao.id} style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) auto auto", alignItems: "center", gap: 8, borderBottom: "1px solid var(--border-color)", padding: "10px 0" }}>
+                                <strong style={{ overflowWrap: "anywhere" }}>{solicitacao.email}</strong>
+                                <button type="button" onClick={() => void handleApprove(solicitacao)}>Aprovar</button>
+                                <button type="button" onClick={() => void handleReject(solicitacao)}>Recusar</button>
+                            </div>
+                        ))}
+                        {solicitacoes.length === 0 && <p style={{ margin: 0 }}>Nenhuma solicitação pendente.</p>}
+                    </section>
 
                     <section style={{ display: "grid", gap: 12 }}>
                         <h2 style={{ margin: 0 }}>Emails autorizados</h2>

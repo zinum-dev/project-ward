@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 
-import PageHeader from "@/lib/PageHeader"
 import { gerarPessoaId, type Familia, type Pessoa } from "@/lib/familias"
 import { salvarFamiliaFirestore } from "@/lib/firestore"
 
@@ -85,10 +84,8 @@ export default function NovaFamiliaPage() {
     } as const
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <PageHeader title={"Famílias"} basePath={basePath} />
-
                 <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
                     <div style={{ textAlign: "center", margin: "0 0 20px" }}>
                         <Link href={`${basePath}/familias`}>Voltar para famílias</Link>
@@ -143,5 +140,3 @@ export default function NovaFamiliaPage() {
         </div>
     )
 }
-
-// Header replaced by shared PageHeader component

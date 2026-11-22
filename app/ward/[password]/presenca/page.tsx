@@ -5,7 +5,6 @@ import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { type Familia, Presenca as PresencaType } from "@/lib/familias"
-import PageHeader from "@/lib/PageHeader"
 import { isFirestoreEnabled, carregarPresencaFirestore, salvarPresencaFirestore, carregarFamiliasFirestore } from "@/lib/firestore"
 
 function getUltimosDomingos() {
@@ -145,13 +144,9 @@ export default function PresencaPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif", padding: "32px 0" }}>
+        <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(700px, 90vw)" }}>
-                <div style={{ textAlign: "center" }}>
-                    <PageHeader title={"Presença"} basePath={basePath} />
-                </div>
-
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+                <div style={{ paddingTop: 12 }}>
                     {erroFamilias && <p role="alert" style={{ color: "#b42318" }}>{erroFamilias}</p>}
                     <div style={{ marginBottom: 16 }}>
                         <p style={{ margin: "0 0 8px" }}>Marcar presença:</p>
