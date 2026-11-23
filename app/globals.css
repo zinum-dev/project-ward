@@ -288,6 +288,28 @@ button:focus-visible {
   background: #d97706;
 }
 
+.attendance-chart-line-swatch {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+}
+
+.attendance-chart-line-swatch.is-present {
+  background: #2563eb;
+}
+
+.attendance-chart-line-swatch.is-online {
+  background: #16a34a;
+}
+
+.attendance-chart-line-swatch.is-stake {
+  background: #d97706;
+}
+
+.attendance-chart-line-swatch.is-total {
+  background: #9333ea;
+}
+
 .attendance-chart-scroll,
 .attendance-chart-table-scroll {
   max-width: 100%;
@@ -305,6 +327,59 @@ button:focus-visible {
   stroke: var(--border-color);
   stroke-opacity: 0.22;
   stroke-dasharray: 3 4;
+}
+
+.weekly-line-chart {
+  display: grid;
+  gap: 12px;
+}
+
+.weekly-line-chart h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.attendance-chart-line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.attendance-chart-line.is-present {
+  stroke: #2563eb;
+}
+
+.attendance-chart-line.is-online {
+  stroke: #16a34a;
+}
+
+.attendance-chart-line.is-stake {
+  stroke: #d97706;
+}
+
+.attendance-chart-line.is-total {
+  stroke: #9333ea;
+}
+
+.attendance-chart-line-point.is-present {
+  fill: #2563eb;
+}
+
+.attendance-chart-line-point.is-online {
+  fill: #16a34a;
+}
+
+.attendance-chart-line-point.is-stake {
+  fill: #d97706;
+}
+
+.attendance-chart-line-point.is-total {
+  fill: #9333ea;
+}
+
+.attendance-chart-line-point {
+  stroke-width: 1;
 }
 
 .attendance-chart-axis-label,
