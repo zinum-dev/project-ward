@@ -4,6 +4,10 @@ import {
     GoogleAuthProvider,
     getAuth,
     onAuthStateChanged,
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    sendPasswordResetEmail,
+    signInWithEmailAndPassword,
     signInWithPopup,
     signOut,
     type User,
@@ -39,6 +43,30 @@ export async function entrarComGoogle() {
     provider.setCustomParameters({ prompt: "select_account" })
     const result = await signInWithPopup(getFirebaseAuth(), provider)
     return result.user
+}
+
+export async function entrarComEmail(email: string, password: string) {
+    const result = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password)
+    return result.user
+}
+
+export async function criarContaComEmail(email: string, password: string) {
+    const result = await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password)
+    await sendEmailVerification(result.user)
+    return result.user
+}
+
+export async function reenviarVerificacaoEmail(user: User) {
+    await sendEmailVerification(user)
+}
+
+export async function recuperarSenha(email: string) {
+    await sendPasswordResetEmail(getFirebaseAuth(), email.trim())
+}
+
+export async function atualizarStatusVerificacao(user: User) {
+    await user.reload()
+    return user
 }
 
 export async function sairDoFirebase() {

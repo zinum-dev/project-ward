@@ -44,12 +44,13 @@ The “Solicitar acesso” option is hidden by default. Set `NEXT_PUBLIC_ACCESS_
 npm install
 ```
 
-5) Google Authentication and access control
+5) Authentication and access control
 
-- In Firebase Console → Authentication → Sign-in method, enable Google.
+- In Firebase Console → Authentication → Sign-in method, enable Google and Email/Password.
+- Firebase sends the built-in email verification and password reset messages; a custom SMTP provider is not required. Review the email templates in Authentication → Templates if you want to customize their appearance and wording.
 - Add the local development host and the production host (for example, the Vercel domain) to Authorized domains.
 - The bootstrap administrator is identified by the Firebase Auth UID configured in `lib/firebase-auth.ts` and `firestore.rules`. This account can manage the global email-to-ward access list and is not removable from the app.
-- The administrator adds each email and the ward IDs it may access. Ward IDs are the URL segments, such as `galeao`.
+- Users can create an account with email and password, but must verify the email and still be added by the administrator to `allowedUsers` with the ward IDs they may access. Ward IDs are the URL segments, such as `galeao`. Creating an account alone does not grant access.
 - Publish the restrictive `firestore.rules` rules before inviting users. The rules deny access by default and authorize each ward using `allowedUsers/{email}.wards`.
 
 6) Data layout

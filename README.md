@@ -11,7 +11,8 @@ O projeto é independente e **não é um produto oficial nem é afiliado ou endo
 - Consulta de domingos recentes e quantidade de pessoas registradas.
 - Organização de discursos por domingo, com pessoa designada e tema opcional; o limite atual é de três discursos por domingo.
 - Separação dos dados por ala no Firestore.
-- Login com Google e controle de acesso por e-mail e ala, quando o Firebase está configurado.
+- Login com Google ou email e senha, criação de conta, verificação de email e recuperação de senha.
+- Controle de acesso por email verificado e ala autorizada pelo administrador.
 
 O escopo atual é um **MVP em validação**. A ata virtual e as sugestões automáticas descritas no roadmap ainda não estão implementadas.
 
@@ -32,6 +33,7 @@ As etapas abaixo combinam o estado atual do projeto com as ideias do rascunho. S
 - [ ] Organizar a programação da reunião, incluindo orações, discursos e temas.
 - [ ] Sugerir participantes para orações e discursos, e temas para os discursos.
 - [ ] Preparar convites e mensagens para copiar ou compartilhar por WhatsApp e e-mail.
+- [ ] Apoiar a organização de classes por sexo e faixa etária (< 12, 12–18 e > 18 anos), sem armazenar a data de nascimento e após revisar a necessidade e a privacidade desses dados.
 
 ### v1.2 — Ministração e ata
 
