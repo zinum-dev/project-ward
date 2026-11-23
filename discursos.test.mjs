@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { adicionarDiscurso, getUltimosDomingos } from './lib/discursos.js';
+import { adicionarDiscurso, filtrarDiscursosPorNomeOuTema, getUltimosDomingos } from './lib/discursos.js';
 
 test('deve gerar domingos dos ultimos 3 meses', () => {
     const domingos = getUltimosDomingos(new Date('2026-09-06T12:00:00'));
@@ -26,4 +26,24 @@ test('deve manter no maximo 3 discursos por domingo', () => {
     assert.equal(proximo.length, 3);
     assert.equal(proximo[2].nome, 'Caio');
     assert.ok(proximo.some((item) => item.nome === 'Elias') === false);
+});
+
+test('deve filtrar discursos por nome ou tema sem diferenciar maiúsculas', () => {
+    const lista = [
+        { id: '1', data: '2026-09-06', nome: 'Ana Silva', tema: 'Serviço' },
+        { id: '2', data: '2026-09-13', nome: 'Bruno Costa', tema: 'Fé em Cristo' },
+        { id: '3', data: '2026-09-20', nome: 'Carla Souza', tema: 'O Serviço Cristão' },
+    ];
+
+    assert.deepEqual(
+        filtrarDiscursosPorNomeOuTema(lista, '  serviço '),
+        [lista[0], lista[2]],
+    );
+    assert.deepEqual(filtrarDiscursosPorNomeOuTema(lista, 'BRUNO'), [lista[1]]);
+});
+
+test('filtro de discursos vazio mantém a lista completa', () => {
+    const lista = [{ id: '1', data: '2026-09-06', nome: 'Ana', tema: '' }];
+
+    assert.equal(filtrarDiscursosPorNomeOuTema(lista, '  '), lista);
 });

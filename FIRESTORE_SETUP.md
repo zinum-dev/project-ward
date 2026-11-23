@@ -23,6 +23,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 To receive access requests protected by reCAPTCHA v2, configure its public site key and server-only verification settings:
 
 ```
+NEXT_PUBLIC_ACCESS_REQUESTS_ENABLED=true
 NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your_recaptcha_v2_site_key
 RECAPTCHA_SECRET_KEY=your_recaptcha_v2_secret_key
 RECAPTCHA_ALLOWED_HOSTNAMES=localhost,your-production-domain.com
@@ -32,6 +33,8 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 ```
 
 Create a reCAPTCHA v2 checkbox key in the Google reCAPTCHA admin console and register every hostname where the app runs. `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` is public; keep `RECAPTCHA_SECRET_KEY` and the Firebase Admin credentials server-only. Add the production variables to the hosting provider's environment settings as well as local `.env.local`.
+
+The “Solicitar acesso” option is hidden by default. Set `NEXT_PUBLIC_ACCESS_REQUESTS_ENABLED=true` only after configuring the reCAPTCHA and Firebase Admin variables; restart the app after changing environment variables.
 
 `NEXT_PUBLIC_FIRESTORE_ENABLED`, `NEXT_PUBLIC_FIREBASE_API_KEY` and `NEXT_PUBLIC_FIREBASE_PROJECT_ID` are required. The `NEXT_PUBLIC_` values are public client configuration, not secrets.
 

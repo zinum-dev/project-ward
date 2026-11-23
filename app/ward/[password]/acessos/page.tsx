@@ -149,7 +149,7 @@ export default function AcessosPage() {
                     <section style={{ display: "grid", gap: 12 }}>
                         <h2 style={{ margin: 0 }}>Solicitações pendentes</h2>
                         {solicitacoes.map((solicitacao) => (
-                            <div key={solicitacao.id} style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) auto auto", alignItems: "center", gap: 8, borderBottom: "1px solid var(--border-color)", padding: "10px 0" }}>
+                            <div key={solicitacao.id} className="access-request-row">
                                 <strong style={{ overflowWrap: "anywhere" }}>{solicitacao.email}</strong>
                                 <button type="button" onClick={() => void handleApprove(solicitacao)}>Aprovar</button>
                                 <button type="button" onClick={() => void handleReject(solicitacao)}>Recusar</button>
@@ -161,7 +161,7 @@ export default function AcessosPage() {
                     <section style={{ display: "grid", gap: 12 }}>
                         <h2 style={{ margin: 0 }}>Emails autorizados</h2>
                         {usuarios.map((usuario) => (
-                            <div key={usuario.email} style={{ display: "grid", gridTemplateColumns: "minmax(160px, 1fr) minmax(180px, 2fr) auto auto", alignItems: "center", gap: 8, borderBottom: "1px solid var(--border-color)", padding: "10px 0" }}>
+                            <div key={usuario.email} className="access-user-row">
                                 <strong style={{ overflowWrap: "anywhere" }}>{usuario.email}</strong>
                                 <input
                                     aria-label={`Wards de ${usuario.email}`}

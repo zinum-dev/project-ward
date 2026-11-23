@@ -5,21 +5,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { type Presenca } from "@/lib/familias"
 import { carregarPresencaFirestore } from "@/lib/firestore"
-
-function getUltimosDomingos() {
-    const hoje = new Date()
-    const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
-    const diaSemana = hojeSemHora.getDay()
-
-    const ultimoDomingo = new Date(hojeSemHora)
-    ultimoDomingo.setDate(hojeSemHora.getDate() - diaSemana)
-
-    return Array.from({ length: 3 }, (_, index) => {
-        const data = new Date(ultimoDomingo)
-        data.setDate(ultimoDomingo.getDate() - index * 7)
-        return data.toISOString().slice(0, 10)
-    })
-}
+import { getUltimosDomingos } from "@/lib/domingos"
 
 function formatDateDisplay(isoDate: string) {
     const d = new Date(isoDate + 'T00:00:00')

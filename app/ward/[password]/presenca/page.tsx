@@ -145,83 +145,88 @@ export default function PresencaPage() {
 
     return (
         <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
-            <div style={{ width: "min(700px, 90vw)" }}>
-                <div style={{ paddingTop: 12 }}>
+            <div className="attendance-page">
+                <div className="attendance-content">
                     {erroFamilias && <p role="alert" style={{ color: "#b42318" }}>{erroFamilias}</p>}
-                    <div style={{ marginBottom: 16 }}>
-                        <p style={{ margin: "0 0 8px" }}>Marcar presença:</p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: 'center' }}>
+                    <section className="attendance-controls" aria-label="Controles de presença">
+                        <div className="attendance-dates">
                             {datas.map((data) => (
                                 <button
                                     key={data}
                                     type="button"
+                                    aria-pressed={data === dataSelecionada}
                                     onClick={() => setDataSelecionada(data)}
+                                    className="attendance-date"
                                     style={{
                                         background: data === dataSelecionada ? "var(--button-bg)" : "transparent",
                                         color: data === dataSelecionada ? "var(--button-text)" : "var(--foreground)",
                                         border: "1px solid var(--border-color)",
-                                        padding: "6px 10px",
                                         cursor: "pointer",
                                     }}
                                 >
                                     {formatDateDisplay(data)}
                                 </button>
                             ))}
-                            <div style={{ marginLeft: 12, fontWeight: 700 }}>
-                                {totais.presente} presencial · {totais.online} online · {totais.estaca} estaca
+                        </div>
+                        <div className="attendance-summary" aria-label="Resumo de presenças">
+                            <div className="attendance-count">
+                                <strong>{totais.presente}</strong>
+                                <span>Presencial</span>
+                            </div>
+                            <div className="attendance-count">
+                                <strong>{totais.online}</strong>
+                                <span>Online</span>
+                            </div>
+                            <div className="attendance-count">
+                                <strong>{totais.estaca}</strong>
+                                <span>Estaca</span>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div style={{ display: "grid", gap: 12 }}>
+                    <div className="attendance-list-container">
                         <input
                             type="text"
                             value={busca}
                             onChange={(event) => setBusca(event.target.value)}
                             placeholder="Buscar pessoa..."
-                            style={{ padding: 8, border: "1px solid var(--border-color)", background: "transparent", color: "var(--input-text)" }}
+                            aria-label="Buscar pessoa"
+                            className="attendance-search"
                         />
 
-                        <div style={{ display: "grid", gap: 8 }}>
+                        <div className="attendance-list">
                             {pessoasFiltradas.length === 0 ? (
                                 <p style={{ margin: 0, textAlign: "center" }}>Nenhuma pessoa encontrada.</p>
                             ) : (
-                                pessoasFiltradas.map((pessoa) => (
-                                    (() => {
-                                        const cores = {
-                                            presente: "#1a7f5a",
-                                            online: "#1769aa",
-                                            estaca: "#a34b00",
-                                        }
-                                        const rotulos = {
-                                            presente: "Presencial",
-                                            online: "Online",
-                                            estaca: "Estaca",
-                                        }
-                                        return (
-                                    <button
-                                        key={pessoa.id}
-                                        type="button"
-                                        onClick={() => alternarPresenca(pessoa.id)}
-                                        aria-label={`${pessoa.nome}: ${pessoa.estado ? rotulos[pessoa.estado] : "Ausente"}. Clique para alterar.`}
-                                        style={{
-                                            width: "100%",
-                                            textAlign: "left",
-                                            padding: "10px 12px",
-                                            border: "1px solid var(--border-color)",
-                                            background: pessoa.estado ? cores[pessoa.estado] : "transparent",
-                                            color: pessoa.estado ? "#ffffff" : "var(--foreground)",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <span style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                                            <span>{pessoa.nome}</span>
-                                            <span>{pessoa.estado ? rotulos[pessoa.estado] : "Ausente"}</span>
-                                        </span>
-                                    </button>
-                                        )
-                                    })()
-                                ))
+                                pessoasFiltradas.map((pessoa) => {
+                                    const cores = {
+                                        presente: "#1a7f5a",
+                                        online: "#1769aa",
+                                        estaca: "#a34b00",
+                                    }
+                                    const rotulos = {
+                                        presente: "Presencial",
+                                        online: "Online",
+                                        estaca: "Estaca",
+                                    }
+                                    return (
+                                        <button
+                                            key={pessoa.id}
+                                            type="button"
+                                            onClick={() => alternarPresenca(pessoa.id)}
+                                            aria-label={`${pessoa.nome}: ${pessoa.estado ? rotulos[pessoa.estado] : "Ausente"}. Clique para alterar.`}
+                                            aria-pressed={Boolean(pessoa.estado)}
+                                            className="attendance-person"
+                                            style={{
+                                                background: pessoa.estado ? cores[pessoa.estado] : "transparent",
+                                                color: pessoa.estado ? "#ffffff" : "var(--foreground)",
+                                            }}
+                                        >
+                                            <span className="attendance-person-name">{pessoa.nome}</span>
+                                            <span className="attendance-person-status">{pessoa.estado ? rotulos[pessoa.estado] : "Ausente"}</span>
+                                        </button>
+                                    )
+                                })
                             )}
                         </div>
                     </div>

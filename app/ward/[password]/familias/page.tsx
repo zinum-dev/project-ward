@@ -45,17 +45,7 @@ export default function FamiliasPage() {
                         return (
                             <div
                                 key={familia.id}
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1.3fr 1fr auto",
-                                    gap: 12,
-                                    alignItems: "center",
-                                    border: "1px solid var(--border-color)",
-                                    borderRadius: 8,
-                                    padding: "12px 16px",
-                                    background: "var(--surface-bg)",
-                                    color: "var(--foreground)",
-                                }}
+                                className="family-card"
                             >
                                 <div>
                                     <div style={{ fontWeight: 700 }}>{responsavel?.nome ?? "-"}</div>

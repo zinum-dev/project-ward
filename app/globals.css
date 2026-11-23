@@ -32,6 +32,10 @@
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -48,6 +52,11 @@ select {
   box-sizing: border-box;
 }
 
+option {
+  background-color: var(--background);
+  color: var(--input-text);
+}
+
 input:focus,
 textarea:focus,
 select:focus {
@@ -56,6 +65,8 @@ select:focus {
 }
 
 button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   background: transparent;
   color: var(--foreground);
   border: 1px solid var(--foreground);
@@ -100,12 +111,174 @@ button:focus-visible {
   justify-content: center;
   align-items: flex-start;
   width: 100%;
+  min-width: 0;
   min-height: calc(100vh - 60px);
-  padding: 24px 0 32px;
+  padding: 24px clamp(12px, 4vw, 32px) 32px;
+}
+
+.screen-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.screen-content :where(input, textarea, select) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.screen-content :where(p, strong, label, small, span, h1, h2, h3) {
+  overflow-wrap: anywhere;
 }
 
 .screen-content--standalone {
   min-height: 100vh;
+}
+
+.attendance-page {
+  width: min(700px, 100%);
+}
+
+.attendance-content {
+  min-width: 0;
+  padding-top: 12px;
+}
+
+.attendance-controls,
+.attendance-list-container {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.attendance-controls {
+  margin-bottom: 16px;
+}
+
+.attendance-dates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-date {
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
+.attendance-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-weight: 700;
+}
+
+.attendance-count {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.attendance-list {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.attendance-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.attendance-person {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  gap: 12px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.attendance-person-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.attendance-person-status {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.access-request-row,
+.access-user-row {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 0;
+}
+
+.access-request-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.access-user-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto auto;
+}
+
+.family-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--surface-bg);
+  color: var(--foreground);
+}
+
+.family-card > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.discourse-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.discourse-card-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.discourse-card-action {
+  flex: 0 0 auto;
+}
+
+.family-member-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.family-member-meta > div {
+  min-width: 0;
+  flex: 1 1 140px;
+  overflow-wrap: anywhere;
 }
 
 .page-header {
@@ -116,6 +289,8 @@ button:focus-visible {
   align-items: center;
   gap: 24px;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 60px;
   padding: 8px clamp(16px, 4vw, 48px);
   border-bottom: 1px solid var(--border-color);
@@ -126,6 +301,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  min-width: 0;
   gap: 4px 24px;
 }
 
@@ -258,14 +434,154 @@ button:focus-visible {
   gap: 8px;
   align-items: center;
 }
-.discursos-add-row .discursos-input {
+.discursos-member-picker {
+  flex: 1 1 0;
+  position: relative;
   min-width: 0;
 }
+
+.discursos-member-picker .discursos-input {
+  width: 100%;
+  padding: 8px;
+}
+
+.discursos-member-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.discursos-member-option {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.discursos-member-empty {
+  margin: 0;
+  padding: 10px 12px;
+  opacity: 0.8;
+}
+
+.discursos-add-row .discursos-input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .discursos-add-row .discursos-btn {
   white-space: nowrap;
 }
 
 @media (max-width: 560px) {
+  .screen-content {
+    padding-top: 16px;
+    padding-bottom: 24px;
+  }
+
+  .attendance-content {
+    padding-top: 0;
+  }
+
+  .attendance-dates,
+  .attendance-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .attendance-date {
+    min-width: 0;
+    padding: 8px 4px;
+    font-size: 14px;
+  }
+
+  .attendance-count {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 64px;
+    gap: 2px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-bg);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .attendance-count strong {
+    font-size: 20px;
+  }
+
+  .attendance-person {
+    min-height: 52px;
+  }
+
+  .access-request-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 6px;
+  }
+
+  .access-request-row button,
+  .access-user-row button {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .access-user-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .access-user-row strong,
+  .access-user-row input {
+    grid-column: 1 / -1;
+  }
+
+  .access-user-row input {
+    width: 100%;
+  }
+
+  .access-user-row button {
+    width: 100%;
+  }
+
+  .family-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 12px;
+  }
+
+  .family-card > :nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+    text-align: left !important;
+  }
+
+  .family-card > :nth-child(3) {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .discourse-card {
+    align-items: flex-start;
+  }
+
+  .discourse-card-action button {
+    padding: 8px;
+    font-size: 13px;
+  }
+
   .page-header-menu-toggle {
     display: block;
   }
@@ -309,6 +625,13 @@ button:focus-visible {
   .discursos-add-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .discursos-add-row .discursos-member-picker,
+  .discursos-add-row .discursos-input {
+    flex: none;
+    align-self: stretch;
+    width: 100%;
   }
 
   .discursos-add-row .discursos-btn {

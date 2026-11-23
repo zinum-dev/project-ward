@@ -1,9 +1,9 @@
 'use client'
 
 import { useParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type FormEvent } from "react"
 
-import { getUltimosDomingos, adicionarDiscurso, removerDiscurso } from "@/lib/discursos"
+import { getUltimosDomingos, adicionarDiscurso, removerDiscurso, filtrarDiscursosPorNomeOuTema } from "@/lib/discursos"
 import { isFirestoreEnabled, carregarDiscursosFirestore, salvarDiscursosFirestore, carregarFamiliasFirestore } from "@/lib/firestore"
 
 function formatDateDisplay(isoDate: string) {
@@ -68,6 +68,10 @@ export default function DiscursosPage() {
     }
 
     const filterLower = filtro.trim().toLowerCase()
+    const discursosFiltrados = filtrarDiscursosPorNomeOuTema(discursos, filtro)
+    const domingosVisiveis = filterLower
+        ? domingos.filter((data) => discursosFiltrados.some((discurso) => discurso.data === data))
+        : domingos
 
     return (
         <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
@@ -85,28 +89,30 @@ export default function DiscursosPage() {
                 {erroFamilias && <p role="alert" style={{ textAlign: "center", color: "#b42318" }}>{erroFamilias}</p>}
 
                 <div style={{ display: "grid", gap: 12 }}>
-                    {domingos.map((data: string) => {
+                    {domingosVisiveis.length === 0 ? (
+                        <p style={{ textAlign: "center" }}>Nenhum domingo contém esse filtro.</p>
+                    ) : domingosVisiveis.map((data: string) => {
                         const porData = discursos.filter((d) => d.data === data)
-                        const visiveis = porData.filter(d => (
-                            filterLower === "" || d.nome.toLowerCase().includes(filterLower) || (d.tema || "").toLowerCase().includes(filterLower)
-                        ))
+                        const visiveis = filterLower
+                            ? discursosFiltrados.filter((discurso) => discurso.data === data)
+                            : porData
 
                         return (
                             <section key={data} className="discursos-section" style={{ border: "1px solid var(--border-color)", padding: 12, borderRadius: 10 }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                                     <strong>{formatDateDisplay(data)}</strong>
-                                    <small>{porData.length} discursos</small>
+                                    <small>{filterLower ? visiveis.length : porData.length} discursos</small>
                                 </div>
 
                                 <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
                                     {visiveis.length === 0 ? <div style={{ opacity: 0.8 }}>Nenhum discurso filtrado.</div> : (
                                         visiveis.map((d) => (
-                                            <div key={d.id} style={{ padding: 8, border: "1px solid var(--border-color)", borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div>
+                                            <div key={d.id} className="discourse-card">
+                                                <div className="discourse-card-info">
                                                     <div style={{ fontWeight: 700 }}>{d.nome}</div>
                                                     <div style={{ fontSize: 13, opacity: 0.85 }}>{d.tema}</div>
                                                 </div>
-                                                <div>
+                                                <div className="discourse-card-action">
                                                     <button onClick={() => {
                                                         const proximo = removerDiscurso(discursos, d.id)
                                                         if (isFirestoreEnabled()) {
@@ -119,7 +125,7 @@ export default function DiscursosPage() {
                                         ))
                                     )}
 
-                                    {porData.length < 3 && (
+                                    {!filterLower && porData.length < 3 && (
                                         <AddForm
                                             data={data}
                                             existingCount={porData.length}
@@ -139,25 +145,83 @@ export default function DiscursosPage() {
 
 function AddForm({ data, existingCount, onAdd, membros }: { data: string; existingCount: number; membros: { id: string; nome: string; familia: string }[]; onAdd: (pessoaId: string, tema: string) => void }) {
     const [selected, setSelected] = useState("")
+    const [memberSearch, setMemberSearch] = useState("")
+    const [memberListOpen, setMemberListOpen] = useState(false)
     const [tema, setTema] = useState("")
+    const membrosFiltrados = membros.filter((membro) =>
+        `${membro.nome} ${membro.familia}`.toLocaleLowerCase().includes(memberSearch.trim().toLocaleLowerCase()),
+    )
 
-    function submit(e: any) {
+    function submit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
         if (!selected) return
         onAdd(selected, tema.trim())
         setSelected("")
+        setMemberSearch("")
         setTema("")
     }
 
     return (
         <form onSubmit={submit} style={{ display: "grid", gap: 8 }}>
-            <div className="discursos-add-row" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <select value={selected} onChange={e => setSelected(e.target.value)} style={{ flex: 1, padding: 8, border: "1px solid var(--border-color)", background: "transparent", color: "var(--input-text)", minWidth: 0 }}>
-                    <option value="">Selecione um membro...</option>
-                    {membros.map(m => (
-                        <option key={m.id} value={m.id}>{m.nome} ({m.familia})</option>
-                    ))}
-                </select>
+            <div className="discursos-add-row">
+                <div
+                    className="discursos-member-picker"
+                    onBlur={(event) => {
+                        if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) {
+                            setMemberListOpen(false)
+                        }
+                    }}
+                >
+                    <input
+                        className="discursos-input"
+                        type="text"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={memberListOpen}
+                        aria-controls={`membros-${data}`}
+                        value={memberSearch}
+                        onFocus={() => setMemberListOpen(true)}
+                        onChange={(event) => {
+                            setMemberSearch(event.target.value)
+                            setSelected("")
+                            setMemberListOpen(true)
+                        }}
+                        onKeyDown={(event) => {
+                            if (event.key === "Escape") setMemberListOpen(false)
+                            if (event.key === "Enter" && memberListOpen && membrosFiltrados.length === 1) {
+                                event.preventDefault()
+                                setSelected(membrosFiltrados[0].id)
+                                setMemberSearch(`${membrosFiltrados[0].nome} (${membrosFiltrados[0].familia})`)
+                                setMemberListOpen(false)
+                            }
+                        }}
+                        placeholder="Buscar membro por nome ou família..."
+                        autoComplete="off"
+                    />
+                    {memberListOpen && (
+                        <div id={`membros-${data}`} className="discursos-member-options" role="listbox" aria-label="Membros">
+                            {membrosFiltrados.length > 0 ? membrosFiltrados.map((membro) => (
+                                <button
+                                    key={membro.id}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={selected === membro.id}
+                                    className="discursos-member-option"
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onClick={() => {
+                                        setSelected(membro.id)
+                                        setMemberSearch(`${membro.nome} (${membro.familia})`)
+                                        setMemberListOpen(false)
+                                    }}
+                                >
+                                    {membro.nome} ({membro.familia})
+                                </button>
+                            )) : (
+                                <p className="discursos-member-empty">Nenhum membro encontrado.</p>
+                            )}
+                        </div>
+                    )}
+                </div>
                 <input className="discursos-input" value={tema} onChange={(e) => setTema(e.target.value)} placeholder="Tema (opcional)" style={{ flex: 1, padding: 8, border: "1px solid var(--border-color)", background: "transparent", color: "var(--input-text)", minWidth: 0 }} />
                 <button className="discursos-btn" type="submit" disabled={existingCount >= 3 || !selected} style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{existingCount >= 3 ? 'LIMITE' : 'Adicionar'}</button>
             </div>

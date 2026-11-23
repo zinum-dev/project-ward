@@ -16,6 +16,7 @@ export default function Home() {
   const [solicitacaoEnviando, setSolicitacaoEnviando] = useState(false)
   const captchaRef = useRef<ReCAPTCHA>(null)
   const captchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+  const accessRequestsEnabled = process.env.NEXT_PUBLIC_ACCESS_REQUESTS_ENABLED === "true"
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -88,65 +89,67 @@ export default function Home() {
           </button>
         </form>
 
-        <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-          <button
-            type="button"
-            onClick={() => {
-              setSolicitacaoAberta((aberta) => !aberta)
-              setMensagemSolicitacao("")
-            }}
-          >
-            Solicitar acesso
-          </button>
+        {accessRequestsEnabled && (
+          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setSolicitacaoAberta((aberta) => !aberta)
+                setMensagemSolicitacao("")
+              }}
+            >
+              Solicitar acesso
+            </button>
 
-          {solicitacaoAberta && (
-            <section style={{ display: "grid", gap: 12, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-              <form onSubmit={solicitarAcesso} style={{ display: "grid", gap: 12 }}>
-                <label htmlFor="email-solicitacao" style={{ display: "grid", gap: 6 }}>
-                  Gmail
-                  <input
-                    id="email-solicitacao"
-                    type="email"
-                    value={emailSolicitacao}
-                    onChange={(event) => setEmailSolicitacao(event.target.value)}
-                    placeholder="voce@gmail.com"
-                    required
-                    style={{ width: "100%", padding: "10px 12px", fontSize: 16 }}
-                  />
-                </label>
-                <label htmlFor="ala-solicitacao" style={{ display: "grid", gap: 6 }}>
-                  Ala desejada
-                  <input
-                    id="ala-solicitacao"
-                    value={alaSolicitacao}
-                    onChange={(event) => setAlaSolicitacao(event.target.value)}
-                    placeholder="Ex: central"
-                    maxLength={80}
-                    required
-                    style={{ width: "100%", padding: "10px 12px", fontSize: 16 }}
-                  />
-                </label>
-                {captchaSiteKey ? (
-                  <ReCAPTCHA
-                    ref={captchaRef}
-                    sitekey={captchaSiteKey}
-                    onChange={(token) => setCaptchaToken(token ?? "")}
-                    onExpired={() => setCaptchaToken("")}
-                  />
-                ) : (
-                  <p role="alert" style={{ margin: 0 }}>reCAPTCHA ainda não está configurado.</p>
+            {solicitacaoAberta && (
+              <section style={{ display: "grid", gap: 12, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+                <form onSubmit={solicitarAcesso} style={{ display: "grid", gap: 12 }}>
+                  <label htmlFor="email-solicitacao" style={{ display: "grid", gap: 6 }}>
+                    Gmail
+                    <input
+                      id="email-solicitacao"
+                      type="email"
+                      value={emailSolicitacao}
+                      onChange={(event) => setEmailSolicitacao(event.target.value)}
+                      placeholder="voce@gmail.com"
+                      required
+                      style={{ width: "100%", padding: "10px 12px", fontSize: 16 }}
+                    />
+                  </label>
+                  <label htmlFor="ala-solicitacao" style={{ display: "grid", gap: 6 }}>
+                    Ala desejada
+                    <input
+                      id="ala-solicitacao"
+                      value={alaSolicitacao}
+                      onChange={(event) => setAlaSolicitacao(event.target.value)}
+                      placeholder="Ex: central"
+                      maxLength={80}
+                      required
+                      style={{ width: "100%", padding: "10px 12px", fontSize: 16 }}
+                    />
+                  </label>
+                  {captchaSiteKey ? (
+                    <ReCAPTCHA
+                      ref={captchaRef}
+                      sitekey={captchaSiteKey}
+                      onChange={(token) => setCaptchaToken(token ?? "")}
+                      onExpired={() => setCaptchaToken("")}
+                    />
+                  ) : (
+                    <p role="alert" style={{ margin: 0 }}>reCAPTCHA ainda não está configurado.</p>
+                  )}
+                  <button type="submit" disabled={solicitacaoEnviando || !captchaSiteKey || !captchaToken}>
+                    {solicitacaoEnviando ? "Enviando..." : "Enviar solicitação"}
+                  </button>
+                </form>
+
+                {mensagemSolicitacao && (
+                  <p role="status" style={{ margin: 0, textAlign: "center" }}>{mensagemSolicitacao}</p>
                 )}
-                <button type="submit" disabled={solicitacaoEnviando || !captchaSiteKey || !captchaToken}>
-                  {solicitacaoEnviando ? "Enviando..." : "Enviar solicitação"}
-                </button>
-              </form>
-
-              {mensagemSolicitacao && (
-                <p role="status" style={{ margin: 0, textAlign: "center" }}>{mensagemSolicitacao}</p>
-              )}
-            </section>
-          )}
-        </div>
+              </section>
+            )}
+          </div>
+        )}
       </main>
     </div>
   )

@@ -197,9 +197,9 @@ export default function FamiliaDetalhePage() {
     return (
         <div className="screen-content" style={{ fontFamily: "sans-serif" }}>
             <div style={{ width: "min(760px, 92vw)" }}>
-                <div style={{ marginTop: 20, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
-                    <div style={{ textAlign: "center", margin: "0 0 20px" }}>
-                        <Link href={`${basePath}/familias`}>Voltar para famílias</Link>
+                <div style={{ display: "grid", gap: 20 }}>
+                    <div style={{ textAlign: "center" }}>
+                        <Link className="outline-action" href={`${basePath}/familias`}>Voltar para famílias</Link>
                     </div>
 
                     {erro ? (
@@ -280,13 +280,13 @@ export default function FamiliaDetalhePage() {
                                                     </label>
                                                 </div>
 
-                                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                                    <div style={{ minWidth: 160 }}>
+                                                <div className="family-member-meta">
+                                                    <div>
                                                         <div style={{ fontSize: 13, opacity: 0.85 }}>Último discurso</div>
                                                         <div style={{ fontWeight: 700 }}>{ultimo ? `${fmt(ultimo.data)} — ${ultimo.tema || ''}` : '—'}</div>
                                                     </div>
 
-                                                    <div style={{ minWidth: 140 }}>
+                                                    <div>
                                                         <div style={{ fontSize: 13, opacity: 0.85 }}>Presenças (últimos 3 meses)</div>
                                                         <div style={{ fontWeight: 700 }}>{presentesUltimos3Meses}/{totalDomingos}</div>
                                                     </div>
