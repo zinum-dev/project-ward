@@ -4,7 +4,9 @@ import test from "node:test"
 import {
     getDomingosDosUltimosMeses,
     getUltimosNDomingos,
+    formatarTempoRelativo,
     resumirDesignacoesDiscurso,
+    resumirEvolucaoSemanal,
     resumirPresencasPorDomingo,
     resumirRodizioPresenca,
     resumirTemasDiscurso,
@@ -42,6 +44,19 @@ test("inclui domingos sem registros e soma categorias sem duplicar pessoas", () 
     assert.deepEqual(resultado, [
         { data: "2026-11-01", presente: 1, online: 1, estaca: 1 },
         { data: "2026-11-08", presente: 0, online: 0, estaca: 0 },
+    ])
+})
+
+test("calcula séries semanais de cada categoria e do total, incluindo semanas vazias", () => {
+    assert.deepEqual(resumirEvolucaoSemanal([
+        { data: "2026-11-01", pessoaId: "p1", estado: "presente" },
+        { data: "2026-11-01", pessoaId: "p2", estado: "online" },
+        { data: "2026-11-01", pessoaId: "p3", estado: "estaca" },
+        { data: "2026-11-08", pessoaId: "p4", estado: "presente" },
+    ], ["2026-11-01", "2026-11-08", "2026-11-15"]), [
+        { data: "2026-11-01", presente: 1, online: 1, estaca: 1, total: 3 },
+        { data: "2026-11-08", presente: 1, online: 0, estaca: 0, total: 1 },
+        { data: "2026-11-15", presente: 0, online: 0, estaca: 0, total: 0 },
     ])
 })
 
@@ -112,6 +127,12 @@ test("resume designações por pessoa no período e mantém a data mais recente 
             { pessoaId: "p3", nome: "Caio", quantidade: 0, ultimaData: null },
         ],
     )
+})
+
+test("calcula o tempo relativo usando a data do discurso inclusive quando futura", () => {
+    assert.equal(formatarTempoRelativo("2026-11-22", "2026-11-23"), "há 1 dia")
+    assert.equal(formatarTempoRelativo("2026-11-23", "2026-11-23"), "hoje")
+    assert.equal(formatarTempoRelativo("2026-12-01", "2026-11-23"), "em 8 dias")
 })
 
 test("agrupa temas equivalentes ignorando espaços, acentos e maiúsculas", () => {

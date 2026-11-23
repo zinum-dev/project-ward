@@ -8,9 +8,11 @@ import {
     getDomingosDosUltimosMeses,
     getUltimosNDomingos,
     resumirDesignacoesDiscurso,
+    resumirEvolucaoSemanal,
     resumirPresencasPorDomingo,
     resumirRodizioPresenca,
     resumirTemasDiscurso,
+    formatarTempoRelativo,
 } from "@/lib/graficos-presenca.js"
 import type { Familia, Presenca } from "@/lib/familias"
 
@@ -60,6 +62,7 @@ export default function GraficosPage() {
         familias: Familia[]
         presencas: Presenca[]
         discursos: Discurso[]
+        referenceDate: string
         error: string
     } | null>(null)
 
@@ -78,7 +81,13 @@ export default function GraficosPage() {
                     carregarPresencaFirestore(ward),
                     carregarDiscursosFirestore(ward),
                 ])
-                if (active) setResult({ ward, familias, presencas, discursos, error: "" })
+                const now = new Date()
+                const referenceDate = [
+                    now.getFullYear(),
+                    String(now.getMonth() + 1).padStart(2, "0"),
+                    String(now.getDate()).padStart(2, "0"),
+                ].join("-")
+                if (active) setResult({ ward, familias, presencas, discursos, referenceDate, error: "" })
             } catch (reason) {
                 if (active) {
                     setResult({
@@ -86,6 +95,7 @@ export default function GraficosPage() {
                         familias: [],
                         presencas: [],
                         discursos: [],
+                        referenceDate: "",
                         error: reason instanceof Error ? reason.message : String(reason),
                     })
                 }
@@ -108,6 +118,10 @@ export default function GraficosPage() {
     }, [currentResult, period])
 
     const datesInPeriod = useMemo(() => getDomingosDosUltimosMeses(period), [period])
+    const weeklyData = useMemo(
+        () => resumirEvolucaoSemanal(currentResult?.presencas ?? [], datesInPeriod),
+        [currentResult, datesInPeriod],
+    )
     const designacoes = useMemo(
         () => resumirDesignacoesDiscurso(currentResult?.familias ?? [], currentResult?.discursos ?? [], datesInPeriod),
         [currentResult, datesInPeriod],
@@ -128,18 +142,22 @@ export default function GraficosPage() {
     const axisMax = Math.max(4, Math.ceil(highestValue / 4) * 4)
     const barWidth = Math.min(20, step * 0.62)
     const maxTema = Math.max(1, ...temas.map((item) => item.quantidade))
+    const lineMax = Math.max(4, Math.ceil(Math.max(0, ...weeklyData.map((item) => item.total)) / 4) * 4)
+    const linePlotHeight = chartHeight - chartTop - chartBottom
+    const lineSeries = [
+        { key: "presente", label: "Presencial", color: "is-present" },
+        { key: "online", label: "Online", color: "is-online" },
+        { key: "estaca", label: "Estaca", color: "is-stake" },
+        { key: "total", label: "Total", color: "is-total" },
+    ] as const
 
-    function formatTempoDesde(data: string | null, referencia: string) {
-        if (!data) return "Nunca designado"
-        const dias = Math.max(0, Math.floor(
-            (new Date(`${referencia}T00:00:00Z`).getTime() - new Date(`${data}T00:00:00Z`).getTime()) / 86400000,
-        ))
-        if (dias < 30) return dias === 0 ? "hoje" : `há ${dias} ${dias === 1 ? "dia" : "dias"}`
-        const meses = Math.floor(dias / 30)
-        if (meses < 12) return `há ${meses} ${meses === 1 ? "mês" : "meses"}`
-        const anos = Math.floor(meses / 12)
-        return `há ${anos} ${anos === 1 ? "ano" : "anos"}`
+    function pointFor(index: number, value: number) {
+        return {
+            x: chartLeft + index * step + step / 2,
+            y: chartTop + linePlotHeight - linePlotHeight * value / lineMax,
+        }
     }
+
 
     return (
         <main className="screen-content">
@@ -179,6 +197,80 @@ export default function GraficosPage() {
                             <li><span className="attendance-chart-swatch is-online" />Online</li>
                             <li><span className="attendance-chart-swatch is-stake" />Estaca</li>
                         </ul>
+
+                        <section className="weekly-line-chart" aria-labelledby="weekly-line-chart-title">
+                            <h2 id="weekly-line-chart-title">Evolução semanal</h2>
+                            <ul className="attendance-chart-legend" aria-label="Séries do gráfico semanal">
+                                {lineSeries.map((series) => (
+                                    <li key={series.key}>
+                                        <span className={`attendance-chart-line-swatch ${series.color}`} />
+                                        {series.label}
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="attendance-chart-scroll">
+                                <svg
+                                    className="attendance-chart-svg"
+                                    viewBox={`0 0 ${width} ${chartHeight}`}
+                                    role="img"
+                                    aria-label={`Evolução semanal de presenças presenciais, online, na estaca e total nos últimos ${period} meses`}
+                                >
+                                    {[0, 1, 2, 3, 4].map((tick) => {
+                                        const value = lineMax * tick / 4
+                                        const y = chartTop + linePlotHeight - linePlotHeight * tick / 4
+                                        return (
+                                            <g key={tick}>
+                                                <line className="attendance-chart-gridline" x1={chartLeft} x2={width - chartRight} y1={y} y2={y} />
+                                                <text className="attendance-chart-axis-label" x={chartLeft - 8} y={y + 4} textAnchor="end">{value}</text>
+                                            </g>
+                                        )
+                                    })}
+                                    {lineSeries.map((series) => {
+                                        const points = weeklyData.map((item, index) =>
+                                            pointFor(index, item[series.key]),
+                                        )
+                                        const pointList = points.map(({ x, y }) => `${x},${y}`).join(" ")
+                                        return (
+                                            <g key={series.key}>
+                                                <polyline
+                                                    className={`attendance-chart-line ${series.color}`}
+                                                    points={pointList}
+                                                />
+                                                {weeklyData.map((item, index) => {
+                                                    const point = points[index]
+                                                    return (
+                                                        <circle
+                                                            key={item.data}
+                                                            className={`attendance-chart-line-point ${series.color}`}
+                                                            cx={point.x}
+                                                            cy={point.y}
+                                                            r={3}
+                                                        >
+                                                            <title>
+                                                                {formatDate(item.data)} — {series.label}: {item[series.key]}
+                                                            </title>
+                                                        </circle>
+                                                    )
+                                                })}
+                                            </g>
+                                        )
+                                    })}
+                                    {weeklyData.map((item, index) => (
+                                        (index === 0 || item.data.slice(0, 7) !== weeklyData[index - 1].data.slice(0, 7)) && (
+                                            <text
+                                                key={item.data}
+                                                className="attendance-chart-month-label"
+                                                x={pointFor(index, 0).x}
+                                                y={chartHeight - 8}
+                                                textAnchor="middle"
+                                            >
+                                                {formatMonth(item.data)}
+                                            </text>
+                                        )
+                                    ))}
+                                </svg>
+                            </div>
+                        </section>
 
                         <div className="attendance-chart-scroll">
                             <svg
@@ -341,7 +433,7 @@ export default function GraficosPage() {
                                                         <td>{item.quantidade}</td>
                                                         <td>
                                                             {item.ultimaData
-                                                                ? `${formatTempoDesde(item.ultimaData, datesInPeriod.at(-1) ?? item.ultimaData)} (${formatDate(item.ultimaData)})`
+                                                                ? `${formatarTempoRelativo(item.ultimaData, currentResult.referenceDate)} (${formatDate(item.ultimaData)})`
                                                                 : "Nunca designado"}
                                                         </td>
                                                     </tr>

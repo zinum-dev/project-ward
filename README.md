@@ -44,6 +44,7 @@ As etapas abaixo combinam o estado atual do projeto com as ideias do rascunho. S
 ### v1.3 — Indicadores
 
 - [x] Exibir presenças por domingo em gráfico empilhado por tipo de participação, com períodos de 3, 6 e 12 meses.
+- [x] Exibir evolução semanal em gráfico de linhas para presencial, online, estaca e total.
 - [x] Mostrar o rodízio agregado de presença nos últimos 12 domingos, sem ranking nominal.
 - [x] Acompanhar a distribuição de designações de discursos por pessoa e os temas mais frequentes.
 - [ ] Criar outros gráficos e resumos para acompanhar presença e informações ao longo do tempo.
