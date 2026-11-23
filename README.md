@@ -25,8 +25,8 @@ As etapas abaixo combinam o estado atual do projeto com as ideias do rascunho. S
 - [x] Cadastro de famílias e membros.
 - [x] Registro e consulta de presença.
 - [x] Organização de discursos por domingo.
-- [ ] Revisar privacidade, permissões e minimização de dados antes de registrar informações pessoais ou sensíveis.
-- [ ] Ampliar testes e validar os fluxos com usuários.
+- [x] Revisar privacidade, permissões e minimização de dados antes de registrar informações pessoais ou sensíveis.
+- [x] Ampliar testes e validar os fluxos com usuários.
 
 ### v1.1 — Preparação das reuniões
 
@@ -43,7 +43,10 @@ As etapas abaixo combinam o estado atual do projeto com as ideias do rascunho. S
 
 ### v1.3 — Indicadores
 
-- [ ] Criar gráficos e resumos para acompanhar presença e outras informações ao longo do tempo.
+- [x] Exibir presenças por domingo em gráfico empilhado por tipo de participação, com períodos de 3, 6 e 12 meses.
+- [x] Mostrar o rodízio agregado de presença nos últimos 12 domingos, sem ranking nominal.
+- [x] Acompanhar a distribuição de designações de discursos por pessoa e os temas mais frequentes.
+- [ ] Criar outros gráficos e resumos para acompanhar presença e informações ao longo do tempo.
 
 ### v2.0 — Integrações
 

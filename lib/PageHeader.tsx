@@ -21,6 +21,7 @@ export default function PageHeader() {
         { href: `${basePath}/datas`, label: "Domingos" },
         { href: `${basePath}/discursos`, label: "Discursos" },
         { href: `${basePath}/presenca`, label: "Presença" },
+        { href: `${basePath}/graficos`, label: "Gráficos" },
         ...(isAdmin ? [{ href: `${basePath}/acessos`, label: "Acessos" }] : []),
     ]
 

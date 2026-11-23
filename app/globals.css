@@ -204,6 +204,229 @@ button:focus-visible {
   width: min(700px, 100%);
 }
 
+.attendance-chart-page {
+  display: grid;
+  gap: 20px;
+  width: min(1000px, 100%);
+  min-width: 0;
+}
+
+.attendance-chart-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.attendance-chart-header h1,
+.attendance-chart-header p {
+  margin: 0;
+}
+
+.attendance-chart-header p {
+  margin-top: 6px;
+  opacity: 0.8;
+}
+
+.attendance-chart-period {
+  display: grid;
+  flex: 0 0 140px;
+  gap: 6px;
+}
+
+.attendance-chart-period select {
+  min-height: 42px;
+  padding: 8px;
+}
+
+.attendance-chart-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.attendance-chart-summary strong {
+  font-size: 28px;
+}
+
+.attendance-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.attendance-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.attendance-chart-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.attendance-chart-swatch.is-present,
+.attendance-chart-bar.is-present {
+  fill: #2563eb;
+  background: #2563eb;
+}
+
+.attendance-chart-swatch.is-online,
+.attendance-chart-bar.is-online {
+  fill: #16a34a;
+  background: #16a34a;
+}
+
+.attendance-chart-swatch.is-stake,
+.attendance-chart-bar.is-stake {
+  fill: #d97706;
+  background: #d97706;
+}
+
+.attendance-chart-scroll,
+.attendance-chart-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.attendance-chart-svg {
+  display: block;
+  width: 100%;
+  min-width: max(100%, 620px);
+  height: auto;
+}
+
+.attendance-chart-gridline {
+  stroke: var(--border-color);
+  stroke-opacity: 0.22;
+  stroke-dasharray: 3 4;
+}
+
+.attendance-chart-axis-label,
+.attendance-chart-month-label {
+  fill: var(--foreground);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.attendance-chart-details summary {
+  width: fit-content;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.attendance-chart-table-scroll {
+  max-height: 360px;
+  margin-top: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.attendance-chart-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.attendance-chart-table-scroll th,
+.attendance-chart-table-scroll td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.attendance-chart-error {
+  color: #b42318;
+}
+
+.rotation-chart {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.speech-chart {
+  gap: 16px;
+}
+
+.speech-theme-list {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.speech-theme-list li {
+  min-width: 0;
+}
+
+.speech-theme-list .rotation-chart-range-label span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.speech-theme-list .rotation-chart-track span {
+  background: #7c3aed;
+}
+
+.rotation-chart > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.rotation-chart h2,
+.rotation-chart p {
+  margin: 0;
+}
+
+.rotation-chart > header p,
+.rotation-chart-note {
+  margin-top: 6px;
+  opacity: 0.8;
+}
+
+.rotation-chart-ranges {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.rotation-chart-range-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.rotation-chart-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-bg);
+}
+
+.rotation-chart-track span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  background: #2563eb;
+}
+
 .attendance-content {
   min-width: 0;
   padding-top: 12px;
@@ -557,6 +780,20 @@ button:focus-visible {
 }
 
 @media (max-width: 560px) {
+  .attendance-chart-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .attendance-chart-period {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .attendance-chart-svg {
+    min-width: 620px;
+  }
+
   .screen-content {
     padding-top: 16px;
     padding-bottom: 24px;
