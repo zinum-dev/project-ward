@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { FormEvent, useRef, useState } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
 import { SettingsMenu } from "@/components/settings-menu"
+import { normalizeWard } from "@/lib/access-request"
 
 export default function Home() {
   const router = useRouter()
@@ -17,16 +18,12 @@ export default function Home() {
   const captchaRef = useRef<ReCAPTCHA>(null)
   const captchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
   const accessRequestsEnabled = process.env.NEXT_PUBLIC_ACCESS_REQUESTS_ENABLED === "true"
+  const wardId = normalizeWard(ward)
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-
-    const valor = ward.trim()
-    if (!valor) {
-      return
-    }
-
-    router.push(`/ward/${encodeURIComponent(valor)}`)
+    if (!wardId) return
+    router.push(`/ward/${encodeURIComponent(wardId)}`)
   }
 
   async function solicitarAcesso(event: FormEvent) {
@@ -70,20 +67,25 @@ export default function Home() {
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <label htmlFor="ward" style={{ display: "grid", gap: 6 }}>
-            Encontre sua Ala, nao use acentos ou caracteres especiais.
+            Encontre sua ala.
             <input
               id="ward"
               value={ward}
               onChange={(event) => setWard(event.target.value)}
-              placeholder="Ex: central"
+              placeholder="Ex: Central"
               style={{ padding: "10px 12px", fontSize: 16 }}
             />
+            {ward.trim() && (
+              <span aria-live="polite" style={{ fontSize: 14, opacity: 0.8 }}>
+                Nome da ala: <strong>{wardId || "—"}</strong>
+              </span>
+            )}
           </label>
 
           <button
             type="submit"
-            disabled={!ward.trim()}
-            style={{ padding: "10px 14px", fontSize: 16, cursor: ward.trim() ? "pointer" : "not-allowed" }}
+            disabled={!wardId}
+            style={{ padding: "10px 14px", fontSize: 16, cursor: wardId ? "pointer" : "not-allowed" }}
           >
             Entrar
           </button>

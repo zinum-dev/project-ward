@@ -162,7 +162,7 @@ export default function AcessosPage() {
                         <h2 style={{ margin: 0 }}>Emails autorizados</h2>
                         {usuarios.map((usuario) => (
                             <div key={usuario.email} className="access-user-row">
-                                <strong style={{ overflowWrap: "anywhere" }}>{usuario.email}</strong>
+                                <strong className="access-user-email">{usuario.email}</strong>
                                 <input
                                     aria-label={`Wards de ${usuario.email}`}
                                     value={wardsEditadas[usuario.email] ?? ""}

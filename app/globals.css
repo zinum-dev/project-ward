@@ -227,7 +227,14 @@ button:focus-visible {
 }
 
 .access-user-row {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto auto;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto auto;
+}
+
+.access-user-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .family-card {
